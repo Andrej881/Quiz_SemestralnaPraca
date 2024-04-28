@@ -14,4 +14,5 @@
     <string name="answers">Answers</string>
     <string name="enter_question_here">Enter Question</string>
     <string name="enter_answer_option_here">Enter Answer option</string>
+    <string name="question_number_playing">Question</string>
 </resources>
