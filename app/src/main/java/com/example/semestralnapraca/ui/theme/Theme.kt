@@ -18,13 +18,15 @@ import androidx.core.view.WindowCompat
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    surface = Color1
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink40,
+    surface = Color1
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -68,29 +70,3 @@ fun SemestralnaPracaTheme(
         content = content
     )
 }
-
-private val myThemeColors = lightColorScheme(
-    primary = Color4,
-    secondary = Color3,
-    tertiary = Color4,
-    surface = Color1,
-    background = Color1,
-    onBackground = Color1,
-    onSurface = Color1,
-)
-
-@Composable
-fun MyTheme(content: @Composable () -> Unit) {
-    MaterialTheme(content = content,
-        colorScheme = myThemeColors)
-
-}
-/*
-    primary = Color4,
-    secondary = Color3,
-    tertiary = Color4,
-    surface = Color1,
-    background = Color1,
-    onBackground = Color1,
-    onSurface = Color1
-*/

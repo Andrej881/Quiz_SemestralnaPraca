@@ -3,4 +3,15 @@
     <string name="back">back</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
+    <string name="log_in">Log in</string>
+    <string name="sign_in">Sign in</string>
+    <string name="play_quizzes">Play Quizzes</string>
+    <string name="log_out">Log out</string>
+    <string name="email">email</string>
+    <string name="my_library">My Library</string>
+    <string name="quizzes">Quizzes</string>
+    <string name="question_number">Question N.</string>
+    <string name="answers">Answers</string>
+    <string name="enter_question_here">Enter Question</string>
+    <string name="enter_answer_option_here">Enter Answer option</string>
 </resources>
