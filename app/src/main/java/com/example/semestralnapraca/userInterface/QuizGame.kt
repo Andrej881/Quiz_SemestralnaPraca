@@ -1,7 +1,6 @@
 package com.example.semestralnapraca.userInterface
 
-import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,41 +15,49 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.tv.material3.Border
 import com.example.semestralnapraca.R
+import com.example.semestralnapraca.ui.theme.Color1
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
-import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
 @Composable
-fun QuizzGame() {
-    val orientation = LocalConfiguration.current.orientation
-
-    // Nastavenie váh podľa orientácie obrazovky
-    val weightValue = if (orientation == Configuration.ORIENTATION_PORTRAIT) .1f else 0.2f
-    Column(
-        modifier = Modifier.fillMaxSize()
+fun QuizGame() {
+    Scaffold(
+        bottomBar = {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .background(color = Color1),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.Bottom)
+            {
+                BottomBarButton(onClick = {}, icon = R.drawable.back)
+                BottomBarButton(onClick = {}, icon = R.drawable.cancel)
+                BottomBarButton(onClick = {}, icon = R.drawable.next)
+            }
+        },
+        modifier = Modifier.fillMaxSize().padding(32.dp)
     ) {
+        innerPadding ->
+
         Column (
             modifier = Modifier
-                .padding(32.dp)
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .weight(1 - weightValue)
+                .background(color = Color1),
         ) {
             var number = 1
             val max = 4
@@ -80,17 +87,6 @@ fun QuizzGame() {
             AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
             AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
             AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-        }
-        Row(modifier = Modifier
-            .padding(start = 32.dp, end = 5.dp, bottom = 32.dp)
-            .fillMaxWidth()
-            .weight(weightValue),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.Bottom)
-        {
-            BottomBarButton(onClick = {}, icon = R.drawable.back)
-            BottomBarButton(onClick = {}, icon = R.drawable.cancel)
-            BottomBarButton(onClick = {}, icon = R.drawable.next)
         }
     }
 }
@@ -145,6 +141,6 @@ fun AnswerButton(
 
 @Preview(showBackground = true)
 @Composable
-fun QuizzGamePreview() {
-    QuizzGame()
+fun QuizGamePreview() {
+    QuizGame()
 }

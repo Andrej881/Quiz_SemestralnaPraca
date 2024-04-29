@@ -4,19 +4,17 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -35,13 +33,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.semestralnapraca.R
+import com.example.semestralnapraca.data.Database
+import com.example.semestralnapraca.data.Quiz
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
 @Composable
-fun QuizzLibrary() {
+fun QuizLibrary() {
     Column (
         modifier = Modifier
             .padding(32.dp)
@@ -63,22 +63,30 @@ fun QuizzLibrary() {
             )
         )
         Spacer(modifier = Modifier.padding(bottom = 50.dp))
-        Quizz(quizzName = "Quizz Name", modifier = Modifier.fillMaxWidth())
-        Quizz(quizzName = "Quizz Name", modifier = Modifier.fillMaxWidth())
-        Quizz(quizzName = "Quizz Name", modifier = Modifier.fillMaxWidth())
-        Quizz(quizzName = "Quizz Name", modifier = Modifier.fillMaxWidth())
-        QuizzButton(
-            onClick = { /*TODO*/ },
+        //QuizList()
+        QuizButton(
+            onClick = { Database().addQuizToDatabase(Quiz(quizName = "Quiz Name")) },
             icon = R.drawable.add,
             color = Color4,
-            modifier = Modifier.fillMaxWidth().border(width = 5.dp, color = Color5, shape = CircleShape)
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(width = 5.dp, color = Color5, shape = CircleShape)
         )
     }
 }
 
 @Composable
-fun Quizz(
-    quizzName: String,
+fun QuizList(
+    itemList: List<Quiz>,
+    onItemClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+
+}
+
+@Composable
+fun Quiz(
+    quizName: String,
     modifier: Modifier = Modifier
 ) {
     Row (
@@ -94,18 +102,23 @@ fun Quizz(
                 modifier = modifier.padding(horizontal = 10.dp, vertical = 10.dp)
             ) {
                 Column {
-                    QuizzButton(
+                    QuizButton(
                         onClick = { /*TODO*/ },
                         icon = R.drawable.rename,
                         color = Color2)
-                    QuizzButton(
+                    QuizButton(
                         onClick = { /*TODO*/ },
                         icon = R.drawable.share,
                         color = Color2)
                 }
-                Text(quizzName,
-                    fontSize = 25.sp)
-                QuizzButton(
+                Button(
+                    onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color3),
+                ) {
+                    Text(text = quizName,
+                        fontSize = 25.sp)
+                }
+                QuizButton(
                     onClick = { /*TODO*/ },
                     icon = R.drawable.remove,
                     color = Color4,
@@ -117,7 +130,7 @@ fun Quizz(
 }
 
 @Composable
-fun QuizzButton(
+fun QuizButton(
     onClick: () -> Unit,
     @DrawableRes icon: Int,
     modifier: Modifier = Modifier,
@@ -139,12 +152,12 @@ fun QuizzButton(
 @Preview(showBackground = true)
 @Composable
 fun GameLibraryPreview() {
-    QuizzLibrary()
+    QuizLibrary()
 }
 
 @Preview(showBackground = true)
 @Composable
-fun QuizzPreview() {
-    Quizz("Quizz name",
+fun QuizPreview() {
+    Quiz("Quiz name",
         Modifier.fillMaxWidth())
 }

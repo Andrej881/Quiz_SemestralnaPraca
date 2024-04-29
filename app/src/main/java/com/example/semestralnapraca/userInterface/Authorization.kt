@@ -13,34 +13,56 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteCutCornerShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import  androidx.tv.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.material3.Border
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.OutlinedButtonDefaults
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color2
+import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun Authorization(
-    authorizationViewModel: AuthorizationViewModel = viewModel()
+    authorizationViewModel: AuthorizationViewModel = viewModel(),
+    onNavigateUp: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    if (authorizationViewModel.errorMessage) {
+        AlertDialog(onDismissRequest = { /* Do nothing */ },
+            title = { Text(stringResource(R.string.failed)) },
+            text = { Text(stringResource(R.string.wrongInfo)) },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = {authorizationViewModel.errorMessage = false}) {
+                    Text(text = stringResource(R.string.ok))
+                }
+            },
+            containerColor = Color2)
+    }
+
     //val authorizationUiState by authorizationViewModel.uiState.collectAsState()
     Column(
         modifier = Modifier
@@ -72,13 +94,13 @@ fun Authorization(
                 .padding(bottom = 32.dp)
                 .fillMaxWidth(),
         )
-        AuthorizationButton(onClick = { authorizationViewModel.logInClick() },
+        AuthorizationButton(onClick = {authorizationViewModel.logInClick( onNavigateUp) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp),
             text = stringResource(R.string.log_in)
         )
-        AuthorizationButton(onClick = { authorizationViewModel.signUpClick() },
+        AuthorizationButton(onClick = { authorizationViewModel.signUpClick(onNavigateUp)},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp),

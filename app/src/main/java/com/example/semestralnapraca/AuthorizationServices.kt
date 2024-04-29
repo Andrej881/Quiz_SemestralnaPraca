@@ -8,6 +8,7 @@ class AuthorizationServices
 {
     suspend fun logIn(email: String, password: String) {
         Firebase.auth.signInWithEmailAndPassword(email, password).await()
+
     }
 
     suspend fun signUp(email: String, password: String) {

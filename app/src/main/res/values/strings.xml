@@ -5,7 +5,7 @@
     <string name="password">Password</string>
     <string name="log_in">Log in</string>
     <string name="play_quizzes">Play Quizzes</string>
-    <string name="log_out">Log out</string>
+    <string name="sign_out">Sign out</string>
     <string name="email">email</string>
     <string name="my_library">My Library</string>
     <string name="quizzes">Quizzes</string>
@@ -15,4 +15,13 @@
     <string name="enter_answer_option_here">Enter Answer option</string>
     <string name="question_number_playing">Question</string>
     <string name="sign_up">Sign Up</string>
+    <string name="auth">Authorization\n</string>
+    <string name="menu">Main Menu\n</string>
+    <string name="online">Online Quizzes</string>
+    <string name="create">Quiz Creation</string>
+    <string name="game">Quiz Game</string>
+    <string name="libr">Quiz Library</string>
+    <string name="failed">Could not proceed</string>
+    <string name="wrongInfo">Bad Authorization Information</string>
+    <string name="ok">OK</string>
 </resources>

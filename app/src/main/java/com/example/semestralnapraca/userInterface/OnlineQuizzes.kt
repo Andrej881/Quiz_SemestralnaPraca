@@ -51,18 +51,18 @@ fun OnlineQuizzes() {
             )
         )
         Spacer(modifier = Modifier.padding(bottom = 50.dp))
-        Quizz("Quizz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
-        Quizz("Quizz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
-        Quizz("Quizz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
-        Quizz("Quizz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
-        Quizz("Quizz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
-        Quizz("Quizz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
+        Quiz("Quiz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
+        Quiz("Quiz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
+        Quiz("Quiz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
+        Quiz("Quiz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
+        Quiz("Quiz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
+        Quiz("Quiz Name", modifier = Modifier.fillMaxWidth(), onClick = {})
     }
 }
 
 @Composable
-fun Quizz(
-    quizzName: String,
+fun Quiz(
+    quizName: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ){
@@ -74,7 +74,7 @@ fun Quizz(
             containerColor = Color3
         )
     ) {
-        Text(quizzName)
+        Text(quizName)
     }
 }
 
