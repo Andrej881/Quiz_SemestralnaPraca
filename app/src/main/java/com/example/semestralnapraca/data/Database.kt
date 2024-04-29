@@ -1,20 +1,23 @@
 package com.example.semestralnapraca.data
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
-class Database constructor(){
-    fun addQuizToDatabase(quiz : Quiz) {
+class Database {
+    fun addQuizToDatabase(quiz : QuizData) {
         val database = FirebaseDatabase.getInstance().reference
         val quizzesRef = database.child("quizzes")
 
         val newQuizRef = quizzesRef.push()
-        val quizID = newQuizRef.key
 
-        var userID: String = ""
+        var userID = ""
 
         val currentUser = FirebaseAuth.getInstance().currentUser
-        currentUser?.let { user ->
+        currentUser?.let {
             userID = currentUser.uid
         }
 
@@ -32,6 +35,34 @@ class Database constructor(){
                 // Handle any errors
             }
     }
+    interface QuizLoadListener {
+        fun onQuizzesLoaded(quizList: List<QuizData>)
+    }
+    fun loadQuizFromDatabase(listener: QuizLoadListener, onlyUsersQuizzes: Boolean = true) {
 
+        val database = FirebaseDatabase.getInstance()
+        val quizRef = database.getReference("quizzes")
 
+        val quizList = mutableListOf<QuizData>()
+
+        quizRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (quizSnapshot in dataSnapshot.children) {
+                    val name = quizSnapshot.child("name").getValue(String::class.java) ?: ""
+
+                    val quiz = QuizData(name)
+                    quizList.add(quiz)
+                }
+                listener.onQuizzesLoaded(quizList)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                val errorMessage = databaseError.message
+
+                Log.e("Firebase Database", "Error: $errorMessage")
+            }
+
+        }
+        )
+    }
 }

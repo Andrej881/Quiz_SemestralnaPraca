@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color4
@@ -35,7 +36,7 @@ fun MainMenu(onNavigateBack: () -> Unit = {},
     Column (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(75.dp),
+            .padding(25.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
 
@@ -85,7 +86,10 @@ fun OptionButton(
     )
     {
         Row (
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Absolute.Left,
+            Alignment.CenterVertically
+
         ){
             if (icon != null) {
                 Icon(
@@ -99,6 +103,7 @@ fun OptionButton(
 
             Text(
                 text = text,
+                fontSize = 25.sp,
                 color = Color5,
                 textAlign = TextAlign.Center)
         }

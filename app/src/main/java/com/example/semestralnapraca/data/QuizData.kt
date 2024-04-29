@@ -1,5 +1,5 @@
 package com.example.semestralnapraca.data
 
-data class Quiz(
+data class QuizData(
     val quizName: String,
 )
