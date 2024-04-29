@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.material3.Border
@@ -52,11 +53,14 @@ fun Authorization(
     val coroutineScope = rememberCoroutineScope()
     if (authorizationViewModel.errorMessage) {
         AlertDialog(onDismissRequest = { /* Do nothing */ },
-            title = { Text(stringResource(R.string.failed)) },
-            text = { Text(stringResource(R.string.wrongInfo)) },
+            title = { Text(stringResource(R.string.failed),
+                fontSize = 30.sp) },
+            text = { Text(stringResource(R.string.wrongInfo),
+                fontSize = 25.sp) },
             modifier = modifier,
             confirmButton = {
-                TextButton(onClick = {authorizationViewModel.errorMessage = false}) {
+                TextButton(onClick = {authorizationViewModel.errorMessage = false},
+                    colors = ButtonDefaults.buttonColors(contentColor = Color5)) {
                     Text(text = stringResource(R.string.ok))
                 }
             },

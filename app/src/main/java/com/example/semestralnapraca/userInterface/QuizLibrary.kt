@@ -1,27 +1,23 @@
 package com.example.semestralnapraca.userInterface
 
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -49,8 +45,32 @@ import com.example.semestralnapraca.ui.theme.Color5
 @Composable
 fun QuizLibrary(
     quizLibraryViewModel: QuizLibraryViewModel = viewModel(),
+    modifier: Modifier = Modifier
 ) {
     val quizzesState by quizLibraryViewModel.quizzesState.collectAsState()
+    if (quizzesState.renaming) {
+        AlertDialog(onDismissRequest = { },
+            title = { Text(stringResource(R.string.renaming)) },
+            text = {
+                TextField(
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color3,
+                        focusedContainerColor = Color3
+                    ),
+                    value = quizzesState.textForRenaming,
+                    onValueChange = {quizLibraryViewModel.updateRenaming(it)})
+            },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = {
+                    quizLibraryViewModel.rename()
+                    quizLibraryViewModel.changeRenamingState(false)
+                    quizLibraryViewModel.updateRenaming("Enter Name")
+                }) {
+                    Text(text = stringResource(R.string.ok))
+                }},
+            containerColor = Color2)
+    }
     LazyColumn(
         modifier = Modifier.padding(32.dp)
     ) {
@@ -73,7 +93,7 @@ fun QuizLibrary(
         }
 
         items(quizzesState.quizzes) { quiz ->
-            Quiz(quizName = quiz.quizName)
+            Quiz(quizName = quiz.quizName,quizID = quiz.quizId, libraryViewModel = quizLibraryViewModel)
         }
 
         item {
@@ -93,24 +113,10 @@ fun QuizLibrary(
 }
 
 @Composable
-fun QuizList(
-    quizzesList: List<QuizData> = listOf(),
-    onItemClick: (Int) -> Unit = {},
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier
-    ) {
-        items(items = quizzesList) { quiz ->
-            // Assuming Quiz is a composable function to display a single QuizData
-            Quiz(quizName = quiz.quizName)
-        }
-    }
-}
-
-@Composable
 fun Quiz(
+    libraryViewModel: QuizLibraryViewModel = viewModel(),
     quizName: String,
+    quizID: String,
     modifier: Modifier = Modifier
 ) {
     Row (
@@ -128,7 +134,7 @@ fun Quiz(
             ) {
                 Column {
                     QuizButton(
-                        onClick = { /*TODO*/ },
+                        onClick = { libraryViewModel.showRenamingDialog(quizID) },
                         icon = R.drawable.rename,
                         color = Color2)
                     QuizButton(
@@ -144,7 +150,7 @@ fun Quiz(
                         fontSize = 25.sp)
                 }
                 QuizButton(
-                    onClick = { /*TODO*/ },
+                    onClick = { libraryViewModel.removeQuiz(quizID) },
                     icon = R.drawable.remove,
                     color = Color4,
                     modifier = Modifier.padding(bottom = 50.dp)
@@ -183,6 +189,7 @@ fun GameLibraryPreview() {
 @Preview(showBackground = true)
 @Composable
 fun QuizPreview() {
-    Quiz("Quiz name",
-        Modifier.fillMaxWidth())
+    Quiz(quizName ="Quiz name",
+        quizID = "1",
+        modifier = Modifier.fillMaxWidth())
 }

@@ -24,4 +24,5 @@
     <string name="failed">Could not proceed</string>
     <string name="wrongInfo">Bad Authorization Information</string>
     <string name="ok">OK</string>
+    <string name="renaming">Change Name</string>
 </resources>
