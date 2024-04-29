@@ -1,7 +1,8 @@
     plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-}
+        id("com.google.gms.google-services")
+    }
 
 android {
     namespace = "com.example.semestralnapraca"
@@ -50,6 +51,10 @@ android {
 }
 
 dependencies {
+
+    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.auth)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

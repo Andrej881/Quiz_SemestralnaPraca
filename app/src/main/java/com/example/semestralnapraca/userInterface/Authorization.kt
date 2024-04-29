@@ -5,19 +5,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.AbsoluteCutCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import  androidx.tv.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -26,22 +25,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.tv.material3.Border
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.OutlinedButtonDefaults
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color2
-import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
 
 @Composable
 fun Authorization(
+    authorizationViewModel: AuthorizationViewModel = viewModel()
 ) {
+    //val authorizationUiState by authorizationViewModel.uiState.collectAsState()
     Column(
         modifier = Modifier
             .statusBarsPadding()
@@ -54,8 +54,9 @@ fun Authorization(
     ) {
         AuthorizationTextField(
             label = R.string.email,
+            value = authorizationViewModel.email,
             leadingIcon = R.drawable.email,
-            onValueChanged = {},
+            onValueChanged = {authorizationViewModel.updateEmail(it)},
             modifier = Modifier
                 .padding(bottom = 32.dp)
                 .fillMaxWidth()
@@ -64,51 +65,42 @@ fun Authorization(
         )
         AuthorizationTextField(
             label = R.string.password,
+            value = authorizationViewModel.password,
             leadingIcon = R.drawable.password,
-            onValueChanged = {},
+            onValueChanged = {authorizationViewModel.updatePassword(it)},
             modifier = Modifier
                 .padding(bottom = 32.dp)
                 .fillMaxWidth(),
         )
-        AuthorizationButton(onClick = { /*TODO*/ },
+        AuthorizationButton(onClick = { authorizationViewModel.logInClick() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp),
             text = stringResource(R.string.log_in)
         )
-        AuthorizationButton(onClick = { /*TODO*/ },
+        AuthorizationButton(onClick = { authorizationViewModel.signUpClick() },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp),
-            text = stringResource(R.string.sign_in)
+            text = stringResource(R.string.sign_up)
         )
     }
 }
-@OptIn(ExperimentalTvMaterial3Api::class)
+
 @Composable
 fun AuthorizationButton(
     onClick: () -> Unit,
     text : String,
     modifier : Modifier
 ) {
-    OutlinedButton(onClick = onClick,
-        modifier = modifier,
-        colors = OutlinedButtonDefaults.colors(
-            containerColor = Color4
+    Button(onClick = onClick,
+        modifier = modifier.border(width = 5.dp, color = Color5, shape = CutCornerShape(5.dp)),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color4,
+            contentColor = Color5
 
         ),
-        border = OutlinedButtonDefaults.border(
-            border = Border(
-                border = BorderStroke(
-                    width = 5.dp,
-                    color = Color5
-                ),
-            )
-        ),
-        shape = OutlinedButtonDefaults.shape(
-            shape = AbsoluteCutCornerShape(5.dp)
-        )
-
+        shape = CutCornerShape(5.dp)
     )
          {
              Text(text = text,
@@ -119,13 +111,14 @@ fun AuthorizationButton(
 @Composable
 fun AuthorizationTextField(
     label: Int,
+    value: String = "",
     @DrawableRes leadingIcon: Int,
     onValueChanged: (String) -> Unit,
     modifier: Modifier
 ) {
     TextField(
         leadingIcon = { Icon(painter = painterResource(id = leadingIcon), null) },
-        value = "",
+        value = value,
         singleLine = true,
         modifier = modifier.border(width = 5.dp, Color5),
         label = { Text(stringResource(label)) },
@@ -133,7 +126,6 @@ fun AuthorizationTextField(
         colors = TextFieldDefaults.colors(
             unfocusedContainerColor = Color2,
             focusedContainerColor = Color2
-
         )
 
     )

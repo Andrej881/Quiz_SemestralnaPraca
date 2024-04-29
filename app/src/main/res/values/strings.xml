@@ -4,7 +4,6 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="log_in">Log in</string>
-    <string name="sign_in">Sign in</string>
     <string name="play_quizzes">Play Quizzes</string>
     <string name="log_out">Log out</string>
     <string name="email">email</string>
@@ -15,4 +14,5 @@
     <string name="enter_question_here">Enter Question</string>
     <string name="enter_answer_option_here">Enter Answer option</string>
     <string name="question_number_playing">Question</string>
+    <string name="sign_up">Sign Up</string>
 </resources>
