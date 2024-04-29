@@ -47,9 +47,23 @@ class Database {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (quizSnapshot in dataSnapshot.children) {
                     val name = quizSnapshot.child("name").getValue(String::class.java) ?: ""
+                    if (onlyUsersQuizzes){
+                        var currentUserID = ""
+                        val userIDinQuiz = quizSnapshot.child("userID").getValue(String::class.java) ?: ""
+                        val currentUser = FirebaseAuth.getInstance().currentUser
+                        currentUser?.let {
+                            currentUserID = currentUser.uid
+                        }
 
-                    val quiz = QuizData(name, quizSnapshot.key.toString())
-                    quizList.add(quiz)
+                        if (currentUserID.equals(userIDinQuiz)) {
+                            val quiz = QuizData(name, quizSnapshot.key.toString())
+                            quizList.add(quiz)
+                        }
+                    } else {
+                        val quiz = QuizData(name, quizSnapshot.key.toString())
+                        quizList.add(quiz)
+                    }
+
                 }
                 listener.onQuizzesLoaded(quizList)
             }
