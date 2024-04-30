@@ -63,7 +63,7 @@ class Database {
     interface QuizLoadListener {
         fun onQuizzesLoaded(quizList: List<QuizData>)
     }
-    fun loadQuizFromDatabase(listener: QuizLoadListener, onlyUsersQuizzes: Boolean = true) {
+    fun loadQuizFromDatabase(listener: QuizLoadListener, sharedQuizzes: Boolean = false) {
         val quizzesRef = database.getReference("quizzes")
 
         val quizList = mutableListOf<QuizData>()
@@ -74,7 +74,7 @@ class Database {
                     val name = quizSnapshot.child("name").getValue(String::class.java) ?: ""
                     val sharing = quizSnapshot.child("sharedToPublicQuizzes").getValue(String::class.java) ?: false.toString()
                     val shareID = quizSnapshot.child("shareID").getValue(String::class.java) ?: ""
-                    if (onlyUsersQuizzes){
+                    if (!sharedQuizzes){
                         var currentUserID = ""
                         val userIDinQuiz = quizSnapshot.child("userID").getValue(String::class.java) ?: ""
                         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -87,8 +87,11 @@ class Database {
                             quizList.add(quiz)
                         }
                     } else {
-                        val quiz = QuizData(name, quizSnapshot.key.toString(), shared = sharing.toBoolean(), shareID = shareID)
-                        quizList.add(quiz)
+                        if (sharing.toBoolean()) {
+                            val quiz = QuizData(name, quizSnapshot.key.toString(), shared = sharing.toBoolean(), shareID = shareID)
+                            quizList.add(quiz)
+                        }
+
                     }
 
                 }

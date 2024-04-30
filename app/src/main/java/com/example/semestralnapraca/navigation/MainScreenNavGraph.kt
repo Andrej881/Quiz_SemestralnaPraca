@@ -48,7 +48,7 @@ fun MainScreenNavGraph(
                 navigateOnline = { navController.navigate(Screens.Online.name) })
         }
         composable(route = Screens.Online.name) {
-            OnlineQuizzes()
+            OnlineQuizzes( navigateToQuizGame = {navController.navigate(Screens.Game.name)})
         }
         composable(route = Screens.Creation.name) {
             QuizCreation { navController.navigate(Screens.Library.name) }

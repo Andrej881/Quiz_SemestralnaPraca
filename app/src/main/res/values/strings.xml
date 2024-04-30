@@ -32,4 +32,6 @@
     <string name="quiz_options">Options</string>
     <string name="play_quiz">Play</string>
     <string name="edit_quiz">Edit</string>
+    <string name="enter_id_of_quiz">Enter ID of quiz</string>
+    <string name="id_does_not_exist">Quiz with entered does not exit</string>
 </resources>

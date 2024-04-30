@@ -12,7 +12,7 @@ class QuizLibraryViewModel(): ViewModel() {
     private val _quizzesState = MutableStateFlow(QuizLibraryUiState())
     val quizzesState: StateFlow<QuizLibraryUiState> = _quizzesState
 
-    val database = Database()
+    private val database = Database()
     init {
         loadQuizzesFromDatabase()
         loadFreeSharingIDFromDatabase()

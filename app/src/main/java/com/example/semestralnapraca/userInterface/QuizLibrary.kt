@@ -1,6 +1,5 @@
 package com.example.semestralnapraca.userInterface
 
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -90,9 +89,8 @@ fun QuizLibrary(
             Spacer(modifier = Modifier.padding(bottom = 50.dp))
         }
 
-        Log.d("duplicita", "${quizzesState.quizzes.size}")
         items(quizzesState.quizzes) { quiz ->
-            Quiz(quizName = quiz.quizName,quizID = quiz.quizId, shared = quiz.shared, shareID = quiz.shareID , libraryViewModel = quizLibraryViewModel)
+            QuizInLibrary(quizName = quiz.quizName,quizID = quiz.quizId, shared = quiz.shared, shareID = quiz.shareID , libraryViewModel = quizLibraryViewModel)
         }
 
         item {
@@ -233,7 +231,7 @@ fun RenamingDialog(
 }
 
 @Composable
-fun Quiz(
+fun QuizInLibrary(
     libraryViewModel: QuizLibraryViewModel = viewModel(),
     quizName: String,
     quizID: String,
@@ -311,7 +309,7 @@ fun GameLibraryPreview() {
 @Preview(showBackground = true)
 @Composable
 fun QuizPreview() {
-    Quiz(
+    QuizInLibrary(
         quizName ="Quiz name",
         quizID = "1",
         modifier = Modifier.fillMaxWidth(),
