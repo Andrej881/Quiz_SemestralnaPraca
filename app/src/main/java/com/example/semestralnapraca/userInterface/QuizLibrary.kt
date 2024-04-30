@@ -1,5 +1,6 @@
 package com.example.semestralnapraca.userInterface
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,29 +49,16 @@ fun QuizLibrary(
     modifier: Modifier = Modifier
 ) {
     val quizzesState by quizLibraryViewModel.quizzesState.collectAsState()
-    if (quizzesState.renaming) {
-        AlertDialog(onDismissRequest = { },
-            title = { Text(stringResource(R.string.renaming)) },
-            text = {
-                TextField(
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color3,
-                        focusedContainerColor = Color3
-                    ),
-                    value = quizzesState.textForRenaming,
-                    onValueChange = {quizLibraryViewModel.updateRenaming(it)})
-            },
-            modifier = modifier,
-            confirmButton = {
-                TextButton(onClick = {
-                    quizLibraryViewModel.rename()
-                    quizLibraryViewModel.changeRenamingState(false)
-                    quizLibraryViewModel.updateRenaming("Enter Name")
-                }) {
-                    Text(text = stringResource(R.string.ok))
-                }},
-            containerColor = Color2)
-    }
+
+    SharingDialog(sharing = quizzesState.sharingState,
+        shareID = quizzesState.sharingID,
+        alreadyShared = quizzesState.alreadyShared,
+        quizLibraryViewModel = quizLibraryViewModel)
+
+    RenamingDialog(quizLibraryViewModel = quizLibraryViewModel,
+        renaming = quizzesState.renaming,
+        textForRenaming = quizzesState.textForRenaming)
+
     LazyColumn(
         modifier = Modifier.padding(32.dp)
     ) {
@@ -92,8 +80,9 @@ fun QuizLibrary(
             Spacer(modifier = Modifier.padding(bottom = 50.dp))
         }
 
+        Log.d("duplicita", "${quizzesState.quizzes.size}")
         items(quizzesState.quizzes) { quiz ->
-            Quiz(quizName = quiz.quizName,quizID = quiz.quizId, libraryViewModel = quizLibraryViewModel)
+            Quiz(quizName = quiz.quizName,quizID = quiz.quizId, shared = quiz.shared, shareID = quiz.shareID , libraryViewModel = quizLibraryViewModel)
         }
 
         item {
@@ -113,11 +102,93 @@ fun QuizLibrary(
 }
 
 @Composable
+fun SharingDialog(
+    modifier: Modifier = Modifier,
+    sharing: Boolean,
+    alreadyShared: Boolean,
+    shareID: String,
+    quizLibraryViewModel: QuizLibraryViewModel
+) {
+    if (sharing) {
+        AlertDialog(onDismissRequest = { },
+            title = { Text(stringResource(R.string.share)) },
+            text = {
+                val text = if (alreadyShared) stringResource(
+                    R.string.quizz_is_already_shared,
+                    shareID
+                ) else stringResource(R.string.code, shareID)
+                TextField(
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color3,
+                        focusedContainerColor = Color3
+                    ),
+                    value = text,
+                    readOnly = true,
+                    onValueChange = {})
+            },
+            modifier = modifier,
+            confirmButton = {
+                if (!alreadyShared)
+                {
+                    TextButton(onClick = {
+                        quizLibraryViewModel.share()
+                        quizLibraryViewModel.changeSharingState(false)
+                    }) {
+                        Text(text = stringResource(R.string.ok))
+                    }
+                }
+                },
+            dismissButton = {TextButton(onClick = {
+                quizLibraryViewModel.changeSharingState(false)
+                quizLibraryViewModel.changeAlreadyChanged(false)
+                quizLibraryViewModel.loadFreeSharingIDFromDatabase()
+            }) {
+                Text(text = stringResource(R.string.cancel))
+            }},
+            containerColor = Color2)
+    }
+}
+
+@Composable
+fun RenamingDialog(
+    quizLibraryViewModel: QuizLibraryViewModel,
+    modifier: Modifier = Modifier,
+    renaming: Boolean,
+    textForRenaming: String
+) {
+    if (renaming) {
+        AlertDialog(onDismissRequest = { },
+            title = { Text(stringResource(R.string.renaming)) },
+            text = {
+                TextField(
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color3,
+                        focusedContainerColor = Color3
+                    ),
+                    value = textForRenaming,
+                    onValueChange = {quizLibraryViewModel.updateRenaming(it)})
+            },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = {
+                    quizLibraryViewModel.rename()
+                    quizLibraryViewModel.changeRenamingState(false)
+                    quizLibraryViewModel.updateRenaming("")
+                }) {
+                    Text(text = stringResource(R.string.ok))
+                }},
+            containerColor = Color2)
+    }
+}
+
+@Composable
 fun Quiz(
     libraryViewModel: QuizLibraryViewModel = viewModel(),
     quizName: String,
     quizID: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shared: Boolean,
+    shareID: String
 ) {
     Row (
         modifier = modifier
@@ -138,12 +209,12 @@ fun Quiz(
                         icon = R.drawable.rename,
                         color = Color2)
                     QuizButton(
-                        onClick = { /*TODO*/ },
+                        onClick = {libraryViewModel.showSharingDialog(quizID, shareID, shared) },
                         icon = R.drawable.share,
                         color = Color2)
                 }
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { /*TODO  PLAY QUIZ*/ },
                     colors = ButtonDefaults.buttonColors(containerColor = Color3),
                 ) {
                     Text(text = quizName,
@@ -189,7 +260,11 @@ fun GameLibraryPreview() {
 @Preview(showBackground = true)
 @Composable
 fun QuizPreview() {
-    Quiz(quizName ="Quiz name",
+    Quiz(
+        quizName ="Quiz name",
         quizID = "1",
-        modifier = Modifier.fillMaxWidth())
+        modifier = Modifier.fillMaxWidth(),
+        shared = false,
+        shareID = "0"
+    )
 }

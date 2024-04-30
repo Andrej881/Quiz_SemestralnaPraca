@@ -25,4 +25,8 @@
     <string name="wrongInfo">Bad Authorization Information</string>
     <string name="ok">OK</string>
     <string name="renaming">Change Name</string>
+    <string name="share">Share</string>
+    <string name="cancel">Cancel</string>
+    <string name="quizz_is_already_shared">Quizz is already shared, Code: %1$s</string>
+    <string name="code">Code : %1$s</string>
 </resources>

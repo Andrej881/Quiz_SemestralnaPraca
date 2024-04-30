@@ -15,6 +15,15 @@ class QuizLibraryViewModel(): ViewModel() {
     val database = Database()
     init {
         loadQuizzesFromDatabase()
+        loadFreeSharingIDFromDatabase()
+    }
+
+    fun loadFreeSharingIDFromDatabase(){
+        database.loadQuizFreeSharingKey(object : Database.QuizShareLoadListener {
+            override fun onQuizzesLoaded(quizShareID: String) {
+                _quizzesState.value = _quizzesState.value.copy(sharingID = quizShareID)
+            }
+        })
     }
     fun loadQuizzesFromDatabase(){
         database.loadQuizFromDatabase(object : Database.QuizLoadListener {
@@ -32,7 +41,7 @@ class QuizLibraryViewModel(): ViewModel() {
     fun rename() {
         val updateInfo = hashMapOf(
             "name" to _quizzesState.value.textForRenaming,)
-        database.updateQuizInDatabase(_quizzesState.value.quizID, updateInfo)
+        database.updateContentInDatabase(table = "quizzes" ,contentID = _quizzesState.value.quizID, updateInfo)
         _quizzesState.value = _quizzesState.value.copy(quizID = "")
         loadQuizzesFromDatabase()
     }
@@ -42,6 +51,9 @@ class QuizLibraryViewModel(): ViewModel() {
     }
 
     fun showRenamingDialog(quizID: String) {
+
+
+
         changeRenamingState(true)
         _quizzesState.value = _quizzesState.value.copy(quizID = quizID)
     }
@@ -50,9 +62,46 @@ class QuizLibraryViewModel(): ViewModel() {
         _quizzesState.value = _quizzesState.value.copy(textForRenaming = it)
     }
 
+    fun changeSharingState(state: Boolean) {
+        _quizzesState.value = _quizzesState.value.copy(sharingState = state)
+    }
+    fun share() {
+        loadFreeSharingIDFromDatabase()
+        val id = _quizzesState.value.sharingID
+        val updateInfo = hashMapOf(
+            "sharedToPublicQuizzes" to true.toString(),
+            "shareID" to id
+        )
+        database.updateContentInDatabase(table = "quizzes" ,contentID = _quizzesState.value.quizID, updateInfo)
+
+        database.updateContentInDatabase(table = "freeSharingCode" ,contentID = "code", hashMapOf(
+            "code" to (id.toInt() + 1).toString()
+        ))
+        loadQuizzesFromDatabase()
+    }
+
+    fun showSharingDialog(quizID: String, sharingID: String, shared: Boolean) {
+        changeSharingState(true)
+        if (shared)
+        {
+            _quizzesState.value = _quizzesState.value.copy(quizID = quizID, sharingID = sharingID, alreadyShared = shared)
+        } else {
+            _quizzesState.value = _quizzesState.value.copy(quizID = quizID)
+        }
+
+
+    }
+
+    fun changeAlreadyChanged(b: Boolean) {
+        _quizzesState.value = _quizzesState.value.copy(alreadyShared = b)
+    }
+
 }
 
 data class QuizLibraryUiState(val quizzes: List<QuizData> = listOf(),
     val renaming: Boolean = false,
     val quizID: String = "",
-    val textForRenaming: String = "")
+    val textForRenaming: String = "",
+    val sharingID: String = "0",
+    val sharingState: Boolean = false,
+    val alreadyShared: Boolean = false)
