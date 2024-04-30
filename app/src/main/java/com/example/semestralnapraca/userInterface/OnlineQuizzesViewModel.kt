@@ -7,11 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class OnlineQuizzesViewModel() : ViewModel() {
-    private val database = Database()
-
-    init {
-        loadQuizzesFromDatabase()
-    }
+    private val database = Database.getInstance()
 
     private val _quizzesState = MutableStateFlow(OnlineQuizzesUiState())
     val quizzesState: StateFlow<OnlineQuizzesUiState> = _quizzesState
@@ -21,7 +17,7 @@ class OnlineQuizzesViewModel() : ViewModel() {
     }
 
     fun loadQuizzesFromDatabase(){
-        database.loadQuizFromDatabase(object : Database.QuizLoadListener {
+        database.loadQuizzesFromDatabase(object : Database.QuizzesLoadListener {
             override fun onQuizzesLoaded(quizList: List<QuizData>) {
                 _quizzesState.value = _quizzesState.value.copy(quizzes = quizList)
             }

@@ -1,5 +1,6 @@
 package com.example.semestralnapraca.userInterface
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +50,7 @@ fun QuizLibrary(
     navigateToQuizGame:(quizID:String) -> Unit = {},
     navigateToQuizCreation:(quizID:String) -> Unit = {},
 ) {
+    quizLibraryViewModel.loadQuizzesFromDatabase()
     val quizzesState by quizLibraryViewModel.quizzesState.collectAsState()
 
     QuizOptionsDialog(
@@ -96,7 +98,7 @@ fun QuizLibrary(
         item {
             QuizButton(
                 onClick = {
-                    Database().addQuizToDatabase(QuizData(quizName = "Quiz Name"))
+                    navigateToQuizCreation("")
                     quizLibraryViewModel.loadQuizzesFromDatabase()
                 },
                 icon = R.drawable.add,

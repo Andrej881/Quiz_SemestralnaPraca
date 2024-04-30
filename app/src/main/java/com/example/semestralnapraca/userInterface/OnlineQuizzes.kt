@@ -48,6 +48,7 @@ fun OnlineQuizzes(
     modifier: Modifier = Modifier,
     navigateToQuizGame:(quizID:String) -> Unit = {}
 ) {
+    onlineQuizzesViewModel.loadQuizzesFromDatabase()
     val quizzesState by onlineQuizzesViewModel.quizzesState.collectAsState()
     ShowBadShareID(show = quizzesState.showQuizDoesNotExist,
         changeShowToFalse = {onlineQuizzesViewModel.changeShowQuizDoesNotExist(false)})

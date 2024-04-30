@@ -1,5 +1,6 @@
 package com.example.semestralnapraca.navigation
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,11 +12,13 @@ import com.example.semestralnapraca.userInterface.Authorization
 import com.example.semestralnapraca.userInterface.MainMenu
 import com.example.semestralnapraca.userInterface.OnlineQuizzes
 import com.example.semestralnapraca.userInterface.QuizCreation
+import com.example.semestralnapraca.userInterface.QuizCreationViewModel
 import com.example.semestralnapraca.userInterface.QuizGame
 import com.example.semestralnapraca.userInterface.QuizLibrary
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
+var userID:String = ""
 enum class Screens(@StringRes val title: Int) {
     Authorization(title = R.string.auth),
     MainMenu(title = R.string.menu),
@@ -29,6 +32,7 @@ fun MainScreenNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
+
     val startDestination: String
     val currentUser = Firebase.auth.currentUser
     if (currentUser != null) {
@@ -51,14 +55,17 @@ fun MainScreenNavGraph(
             OnlineQuizzes( navigateToQuizGame = {navController.navigate(Screens.Game.name)})
         }
         composable(route = Screens.Creation.name) {
-            QuizCreation { navController.navigate(Screens.Library.name) }
+            QuizCreation (navigateOnCancel =  {navController.navigate(Screens.Library.name)},
+                quizID = userID)
         }
         composable(route = Screens.Game.name) {
             QuizGame()
         }
         composable(route = Screens.Library.name) {
             QuizLibrary( navigateToQuizGame = {navController.navigate(Screens.Game.name)},
-                navigateToQuizCreation = {navController.navigate(Screens.Creation.name)})
+                navigateToQuizCreation = {navController.navigate(Screens.Creation.name)
+                    userID = it
+                })
         }
     }
 }

@@ -1,19 +1,18 @@
 package com.example.semestralnapraca.userInterface
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -22,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,8 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
-import com.example.semestralnapraca.navigation.Screens
 import com.example.semestralnapraca.ui.theme.Color1
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
@@ -45,7 +45,14 @@ import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
 @Composable
-fun QuizCreation(navigateOnCancel: () -> Unit = {}) {
+fun QuizCreation(navigateOnCancel: () -> Unit = {},
+                 quizCreationViewModel: QuizCreationViewModel = viewModel(),
+                 quizID: String ="")  {
+    val quizCreationUiState = quizCreationViewModel.creationState
+    LaunchedEffect(quizID) {
+        Log.d("CREATION",quizID)
+        quizCreationViewModel.loadQuiz(quizID)
+    }
     Scaffold(
         bottomBar = {
             Row(modifier = Modifier
@@ -54,53 +61,51 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {}) {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.Bottom)
             {
-                BottomBarButton(onClick = {}, icon = R.drawable.back)
+                BottomBarButton(onClick = {quizCreationViewModel.move(forward = false)}, icon = R.drawable.back)
                 BottomBarButton(onClick = navigateOnCancel, icon = R.drawable.cancel)
-                BottomBarButton(onClick = {}, icon = R.drawable.next)
+                BottomBarButton(onClick = {quizCreationViewModel.move(forward = true)}, icon = R.drawable.next)
             }
         },
-        modifier = Modifier.fillMaxSize().padding(32.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp)
     ) {
         innerPadding ->
 
-        Column (
+        LazyColumn (
             modifier = Modifier
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
                 .background(color = Color1)
         ) {
-            var number = 1
-            ReadOnlyTField(value = stringResource(id = R.string.question_number) + number)
-            Spacer(modifier = Modifier.padding(bottom = 25.dp))
+            item {
+                var number = 1
+                ReadOnlyTField(value = stringResource(id = R.string.question_number) + number)
+                Spacer(modifier = Modifier.padding(bottom = 25.dp))
 
-            var amountInput by remember { mutableStateOf("") }
+                var amountInput by remember { mutableStateOf("") }
 
-            TextField(
-                value = amountInput,
-                onValueChange = { amountInput = it },
-                label = { Text(stringResource(R.string.enter_question_here))},
-                modifier = Modifier
-                    .padding(bottom = 25.dp)
-                    .fillMaxWidth()
-                    .border(width = 5.dp, color = Color5),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color3,
-                    unfocusedContainerColor = Color3
+                TextField(
+                    value = amountInput,
+                    onValueChange = { amountInput = it },
+                    label = { Text(stringResource(R.string.enter_question_here))},
+                    modifier = Modifier
+                        .padding(bottom = 25.dp)
+                        .fillMaxWidth()
+                        .border(width = 5.dp, color = Color5),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color3,
+                        unfocusedContainerColor = Color3
+                    )
                 )
-            )
 
-            ReadOnlyTField(value = stringResource(id = R.string.answers))
-            Spacer(modifier = Modifier.padding(bottom = 25.dp))
-
-            AnswerField()
-            AnswerField()
-            AnswerField()
-            AnswerField()
-            AnswerField()
-            AnswerField()
-            AnswerField()
-            AnswerField()
-            AddAnswerButton( onClick = {}, modifier = Modifier.fillMaxWidth())
+                ReadOnlyTField(value = stringResource(id = R.string.answers))
+                Spacer(modifier = Modifier.padding(bottom = 25.dp))
+            }
+            //items{}
+            item{
+                AddAnswerButton( onClick = {}, modifier = Modifier.fillMaxWidth())
+            }
         }
 
     }
@@ -113,7 +118,8 @@ fun BottomBarButton(
     onClick: () -> Unit
 ) {
     Button(onClick = onClick,
-        modifier = modifier.padding(start = 10.dp,end = 30.dp)
+        modifier = modifier
+            .padding(start = 10.dp, end = 30.dp)
             .border(width = 5.dp, color = Color5, shape = CircleShape),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color4
@@ -137,8 +143,8 @@ fun AddAnswerButton(
         ),
         shape = RectangleShape
     ) {
-        Icon(painter = painterResource(id = R.drawable.add), contentDescription = null, tint = Color5,
-            modifier = Modifier.border(width = 2.5.dp, color = Color5, shape = CircleShape))
+        Icon(painter = painterResource(id = R.drawable.add2), contentDescription = null, tint = Color5,
+            modifier = Modifier.size(25.dp))
     }
 }
 

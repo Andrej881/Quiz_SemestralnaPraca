@@ -1,22 +1,15 @@
 package com.example.semestralnapraca.userInterface
 
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
-import com.example.semestralnapraca.R
 import com.example.semestralnapraca.data.Database
 import com.example.semestralnapraca.data.QuizData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
 class QuizLibraryViewModel(): ViewModel() {
     private val _quizzesState = MutableStateFlow(QuizLibraryUiState())
     val quizzesState: StateFlow<QuizLibraryUiState> = _quizzesState
 
-    private val database = Database()
-    init {
-        loadQuizzesFromDatabase()
-        loadFreeSharingIDFromDatabase()
-    }
+    private val database = Database.getInstance()
 
     fun loadFreeSharingIDFromDatabase(){
         database.loadQuizFreeSharingKey(object : Database.QuizShareLoadListener {
@@ -26,7 +19,7 @@ class QuizLibraryViewModel(): ViewModel() {
         })
     }
     fun loadQuizzesFromDatabase(){
-        database.loadQuizFromDatabase(object : Database.QuizLoadListener {
+        database.loadQuizzesFromDatabase(object : Database.QuizzesLoadListener {
             override fun onQuizzesLoaded(quizList: List<QuizData>) {
                 _quizzesState.value = _quizzesState.value.copy(quizzes = quizList)
             }
@@ -51,9 +44,6 @@ class QuizLibraryViewModel(): ViewModel() {
     }
 
     fun showRenamingDialog(quizID: String) {
-
-
-
         changeRenamingState(true)
         _quizzesState.value = _quizzesState.value.copy(quizID = quizID)
     }
@@ -66,7 +56,6 @@ class QuizLibraryViewModel(): ViewModel() {
         _quizzesState.value = _quizzesState.value.copy(sharingState = state)
     }
     fun share() {
-        loadFreeSharingIDFromDatabase()
         val id = _quizzesState.value.sharingID
         val updateInfo = hashMapOf(
             "sharedToPublicQuizzes" to true.toString(),
@@ -81,6 +70,7 @@ class QuizLibraryViewModel(): ViewModel() {
     }
 
     fun showSharingDialog(quizID: String, sharingID: String, shared: Boolean) {
+        loadFreeSharingIDFromDatabase()
         changeSharingState(true)
         if (shared)
         {
