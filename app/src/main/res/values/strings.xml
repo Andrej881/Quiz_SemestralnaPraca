@@ -29,4 +29,7 @@
     <string name="cancel">Cancel</string>
     <string name="quizz_is_already_shared">Quizz is already shared, Code: %1$s</string>
     <string name="code">Code : %1$s</string>
+    <string name="quiz_options">Options</string>
+    <string name="play_quiz">Play</string>
+    <string name="edit_quiz">Edit</string>
 </resources>

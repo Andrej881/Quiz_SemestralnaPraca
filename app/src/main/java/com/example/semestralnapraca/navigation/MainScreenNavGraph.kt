@@ -57,7 +57,8 @@ fun MainScreenNavGraph(
             QuizGame()
         }
         composable(route = Screens.Library.name) {
-            QuizLibrary()
+            QuizLibrary( navigateToQuizGame = {navController.navigate(Screens.Game.name)},
+                navigateToQuizCreation = {navController.navigate(Screens.Creation.name)})
         }
     }
 }

@@ -96,6 +96,16 @@ class QuizLibraryViewModel(): ViewModel() {
         _quizzesState.value = _quizzesState.value.copy(alreadyShared = b)
     }
 
+    fun showPlatOrEditOptionsDialog(quizID: String) {
+        changeQuizOptionsState(true)
+        _quizzesState.value = _quizzesState.value.copy(quizID = quizID)
+        //TO DO refactor fun changeQuizID
+    }
+
+    fun changeQuizOptionsState(b: Boolean) {
+        _quizzesState.value = _quizzesState.value.copy(quizOptions = b)
+    }
+
 }
 
 data class QuizLibraryUiState(val quizzes: List<QuizData> = listOf(),
@@ -104,4 +114,5 @@ data class QuizLibraryUiState(val quizzes: List<QuizData> = listOf(),
     val textForRenaming: String = "",
     val sharingID: String = "0",
     val sharingState: Boolean = false,
-    val alreadyShared: Boolean = false)
+    val alreadyShared: Boolean = false,
+    val quizOptions: Boolean = false)

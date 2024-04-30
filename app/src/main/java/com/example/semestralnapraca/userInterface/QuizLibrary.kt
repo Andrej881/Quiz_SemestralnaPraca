@@ -46,9 +46,19 @@ import com.example.semestralnapraca.ui.theme.Color5
 @Composable
 fun QuizLibrary(
     quizLibraryViewModel: QuizLibraryViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navigateToQuizGame:(quizID:String) -> Unit = {},
+    navigateToQuizCreation:(quizID:String) -> Unit = {},
 ) {
     val quizzesState by quizLibraryViewModel.quizzesState.collectAsState()
+
+    QuizOptionsDialog(
+        showOptions = quizzesState.quizOptions,
+        quizLibraryViewModel = quizLibraryViewModel,
+        quizID = quizzesState.quizID,
+        navigateToQuizCreation = navigateToQuizCreation,
+        navigateToQuizGame = navigateToQuizGame
+    )
 
     SharingDialog(sharing = quizzesState.sharingState,
         shareID = quizzesState.sharingID,
@@ -102,6 +112,41 @@ fun QuizLibrary(
 }
 
 @Composable
+fun QuizOptionsDialog(
+    navigateToQuizGame:(quizID:String) -> Unit = {},
+    navigateToQuizCreation:(quizID:String) -> Unit = {},
+    quizID: String,
+    showOptions: Boolean,
+    quizLibraryViewModel: QuizLibraryViewModel,
+    modifier: Modifier = Modifier
+                      ) {
+    if (showOptions) {
+        AlertDialog(onDismissRequest = { quizLibraryViewModel.changeQuizOptionsState(false) },
+            title = { Text(stringResource(R.string.quiz_options), color = Color5) },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = {
+                    navigateToQuizGame(quizID)
+                    quizLibraryViewModel.changeQuizOptionsState(false)
+                }) {
+                    Text(text = stringResource(R.string.play_quiz),
+                        fontSize = 20.sp,
+                        color = Color5)
+                }
+            },
+            dismissButton = {TextButton(onClick = {
+                navigateToQuizCreation(quizID)
+                quizLibraryViewModel.changeQuizOptionsState(false)
+            }) {
+                Text(text = stringResource(R.string.edit_quiz),
+                    fontSize = 20.sp,
+                    color = Color5)
+            }},
+            containerColor = Color2)
+    }
+}
+
+@Composable
 fun SharingDialog(
     modifier: Modifier = Modifier,
     sharing: Boolean,
@@ -111,7 +156,7 @@ fun SharingDialog(
 ) {
     if (sharing) {
         AlertDialog(onDismissRequest = { },
-            title = { Text(stringResource(R.string.share)) },
+            title = { Text(stringResource(R.string.share), color = Color5) },
             text = {
                 val text = if (alreadyShared) stringResource(
                     R.string.quizz_is_already_shared,
@@ -134,7 +179,9 @@ fun SharingDialog(
                         quizLibraryViewModel.share()
                         quizLibraryViewModel.changeSharingState(false)
                     }) {
-                        Text(text = stringResource(R.string.ok))
+                        Text(text = stringResource(R.string.ok),
+                            fontSize = 20.sp,
+                            color = Color5)
                     }
                 }
                 },
@@ -143,7 +190,9 @@ fun SharingDialog(
                 quizLibraryViewModel.changeAlreadyChanged(false)
                 quizLibraryViewModel.loadFreeSharingIDFromDatabase()
             }) {
-                Text(text = stringResource(R.string.cancel))
+                Text(text = stringResource(R.string.cancel),
+                    fontSize = 20.sp,
+                    color = Color5)
             }},
             containerColor = Color2)
     }
@@ -157,8 +206,8 @@ fun RenamingDialog(
     textForRenaming: String
 ) {
     if (renaming) {
-        AlertDialog(onDismissRequest = { },
-            title = { Text(stringResource(R.string.renaming)) },
+        AlertDialog(onDismissRequest = { quizLibraryViewModel.changeRenamingState(false) },
+            title = { Text(stringResource(R.string.renaming), color = Color5) },
             text = {
                 TextField(
                     colors = TextFieldDefaults.colors(
@@ -175,7 +224,9 @@ fun RenamingDialog(
                     quizLibraryViewModel.changeRenamingState(false)
                     quizLibraryViewModel.updateRenaming("")
                 }) {
-                    Text(text = stringResource(R.string.ok))
+                    Text(text = stringResource(R.string.ok),
+                        fontSize = 20.sp,
+                        color = Color5)
                 }},
             containerColor = Color2)
     }
@@ -214,7 +265,7 @@ fun Quiz(
                         color = Color2)
                 }
                 Button(
-                    onClick = { /*TODO  PLAY QUIZ*/ },
+                    onClick = { libraryViewModel.showPlatOrEditOptionsDialog(quizID) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color3),
                 ) {
                     Text(text = quizName,
