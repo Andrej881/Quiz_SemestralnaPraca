@@ -5,34 +5,43 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,22 +63,47 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
         Log.d("CREATION",quizID)
         quizCreationViewModel.loadQuiz(quizID)
     }
+    ShowEditingAnswerAlertDialog(
+        show = quizCreationUiState.showingAnswer,
+        onDismis = {quizCreationViewModel.changeShowAddingAnswer(false)},
+        onDelete = {quizCreationViewModel.deleteAnswer()
+            quizCreationViewModel.changeShowAddingAnswer(false)},
+        points = quizCreationUiState.currentAnswerPoints,
+        onContentUpdate = {quizCreationViewModel.changeAnswerContent(it)},
+        onCorrectChanged = {quizCreationViewModel.changeAnswerCorrectnes(it)},
+        onPointsUpdate = {quizCreationViewModel.changeAnswerPoints(it)},
+        content = quizCreationUiState.currentAnswerContent,
+        correct =  quizCreationUiState.currentAnswerCorrectness,
+        onConfirm = {
+            quizCreationViewModel.editAnswer()
+            quizCreationViewModel.changeShowAddingAnswer(false)
+
+        }
+    )
     Scaffold(
         bottomBar = {
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .background(color = Color1),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Bottom)
-            {
-                BottomBarButton(onClick = {quizCreationViewModel.move(forward = false)}, icon = R.drawable.back)
-                BottomBarButton(onClick = navigateOnCancel, icon = R.drawable.cancel)
-                BottomBarButton(onClick = {quizCreationViewModel.move(forward = true)}, icon = R.drawable.next)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                AddAnswerButton( onClick = {
+                    quizCreationViewModel.changeShowAddingAnswer(true)
+                    quizCreationViewModel.setCurrentAnswerID("")},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp))
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color = Color1),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.Bottom)
+                {
+                    BarButton(onClick = {quizCreationViewModel.move(forward = false)}, icon = R.drawable.back)
+                    BarButton(onClick = {quizCreationViewModel.deleteQuiz(navigateOnCancel)} , icon = R.drawable.cancel)
+                    BarButton(onClick = {quizCreationViewModel.move(forward = true)}, icon = R.drawable.next)
+                }
             }
         },
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp)
+            .padding(32.dp),
     ) {
         innerPadding ->
 
@@ -99,9 +133,16 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
                 ReadOnlyTField(value = stringResource(id = R.string.answers))
                 Spacer(modifier = Modifier.padding(bottom = 25.dp))
             }
-            //items{}
-            item{
-                AddAnswerButton( onClick = {}, modifier = Modifier.fillMaxWidth())
+            items(quizCreationUiState.answers) {answer ->
+                AnswerButton(
+                    answerID = answer.answerID,
+                    value = answer.content,
+                    points = answer.points.toString(),
+                    onClick = {
+                        quizCreationViewModel.setCurrentAnswerID(it)
+                        quizCreationViewModel.changeShowAddingAnswer(true)
+                    }
+                )
             }
         }
 
@@ -109,7 +150,109 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
 }
 
 @Composable
-fun BottomBarButton(
+fun ShowEditingAnswerAlertDialog(
+    show:Boolean,
+    points: String,
+    onDismis: () -> Unit,
+    onConfirm: () -> Unit,
+    onDelete: () -> Unit,
+    onContentUpdate: (String) -> Unit,
+    onPointsUpdate: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    content: String,
+    correct: Boolean,
+    onCorrectChanged: (Boolean) -> Unit
+) {
+    if (show) {
+        AlertDialog(onDismissRequest = onDismis,
+            title = { Text(stringResource(R.string.answer), color = Color5) },
+            text = {
+                Column() {
+                    TextField(
+                        value = content,
+                        modifier = Modifier
+                            .padding(bottom = 25.dp)
+                            .border(width = 5.dp, Color5),
+                        label = {Text(stringResource(R.string.answer))},
+                        onValueChange = {newContent -> onContentUpdate(newContent)},
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = Color3,
+                            focusedContainerColor = Color3,
+                            unfocusedLabelColor = Color5,
+                            focusedLabelColor = Color5,
+                            cursorColor = Color5)
+                    )
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        TextField(
+                            value = points,
+                            modifier = Modifier
+                                .widthIn(15.dp)
+                                .border(width = 5.dp, Color5),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number
+                            ),
+                            label = { Text(stringResource(R.string.points))},
+                            onValueChange = {newPoints -> onPointsUpdate(newPoints)},
+                            colors = TextFieldDefaults.colors(
+                                unfocusedContainerColor = Color3,
+                                focusedContainerColor = Color3,
+                                unfocusedLabelColor = Color5,
+                                focusedLabelColor = Color5,
+                                cursorColor = Color5
+                            )
+                        )
+                        Switch(
+                            colors = SwitchDefaults.colors(
+                                checkedBorderColor = Color5,
+                                uncheckedBorderColor = Color5,
+                                uncheckedIconColor = Color5,
+                                uncheckedThumbColor = Color5,
+                                checkedThumbColor = Color5,
+                                uncheckedTrackColor = Color3,
+                                checkedTrackColor = Color4
+
+
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 10.dp)
+                                .wrapContentWidth(Alignment.End),
+                            checked = correct,
+                            onCheckedChange = {newCorrectness -> onCorrectChanged(newCorrectness)}
+                        )
+                    }
+                }
+                   },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = onConfirm) {
+                    Text(text = stringResource(R.string.ok),
+                        fontSize = 20.sp,
+                        color = Color5)
+                }
+            },
+            dismissButton = {
+
+                TextButton(onClick = onDelete) {
+                    Text(text = stringResource(R.string.delete),
+                        fontSize = 20.sp,
+                        color = Color5)
+                }
+                TextButton(onClick = onDismis) {
+                    Text(text = stringResource(R.string.cancel),
+                        fontSize = 20.sp,
+                        color = Color5)
+                }
+            },
+            containerColor = Color2)
+    }
+}
+
+@Composable
+fun BarButton(
     modifier: Modifier = Modifier,
     @DrawableRes icon: Int,
     onClick: () -> Unit
@@ -146,23 +289,45 @@ fun AddAnswerButton(
 }
 
 @Composable
-fun AnswerField(
+fun AnswerButton(
+    answerID: String = "",
     value: String = "",
+    points: String = "",
+    onClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    TextField(
-        value = "",
-        onValueChange = {},
-        label = { Text(stringResource(R.string.enter_answer_option_here))},
+    Log.d("ANSWERID", answerID)
+    Button(
+        onClick = { onClick(answerID)},
+        shape = RectangleShape,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color3,
+        ),
         modifier = Modifier
             .padding(bottom = 25.dp)
             .fillMaxWidth()
             .border(width = 5.dp, color = Color5),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color2,
-            unfocusedContainerColor = Color2
+        ) {
+        Row (
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
         )
-    )
+        {
+            Text(
+                text = value,
+                color = Color5,
+                fontSize = 20.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = points,
+                textAlign = TextAlign.Center,
+                color = Color(0xFFFFFFFF),
+                fontSize = 20.sp,
+                modifier = Modifier.weight(.25f)
+            )
+        }
+    }
 }
 
 @Composable
@@ -190,4 +355,27 @@ fun ReadOnlyTField(
 @Composable
 fun QuizCreationPreview() {
     QuizCreation()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ShowAddingAnswerAlertDialogPreview() {
+    ShowEditingAnswerAlertDialog(
+        show = true,
+        onDismis = {},
+        points = "",
+        onContentUpdate = {},
+        onCorrectChanged = {},
+        onPointsUpdate = {},
+        content = "",
+        correct = true,
+        onConfirm = {},
+        onDelete = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ShowAnswerFieldPreview() {
+    AnswerButton(value = "AnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswer", points = "1000")
 }

@@ -50,7 +50,7 @@ class QuizLibraryViewModel(): ViewModel() {
             withContext(Dispatchers.IO) {
                 database.updateContentInDatabase(
                     table = "quizzes",
-                    contentID = listOf(_quizzesState.value.quizID),
+                    childPath = listOf(_quizzesState.value.quizID),
                     updateInfo
                 )
             }
@@ -85,13 +85,13 @@ class QuizLibraryViewModel(): ViewModel() {
             withContext(Dispatchers.IO) {
                 database.updateContentInDatabase(
                     table = "quizzes",
-                    contentID = listOf(_quizzesState.value.quizID),
+                    childPath = listOf(_quizzesState.value.quizID),
                     updateInfo
                 )
 
                 database.updateContentInDatabase(
                     table = "freeSharingCode",
-                    contentID = listOf("code"),
+                    childPath = listOf("code"),
                     hashMapOf("code" to (id.toInt() + 1).toString())
                 )
             }
@@ -128,7 +128,8 @@ class QuizLibraryViewModel(): ViewModel() {
 
 }
 
-data class QuizLibraryUiState(val quizzes: List<QuizData> = listOf(),
+data class QuizLibraryUiState(
+    val quizzes: List<QuizData> = listOf(),
     val renaming: Boolean = false,
     val quizID: String = "",
     val textForRenaming: String = "",

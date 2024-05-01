@@ -2,6 +2,7 @@ package com.example.semestralnapraca.userInterface
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.semestralnapraca.data.AnswerData
 import com.example.semestralnapraca.data.Database
 import com.example.semestralnapraca.data.QuestionData
 import com.example.semestralnapraca.data.QuizData
@@ -10,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class QuizCreationViewModel(): ViewModel() {
     private val _creationState = MutableStateFlow(QuizCreationUiState())
@@ -19,7 +21,9 @@ class QuizCreationViewModel(): ViewModel() {
         CoroutineScope(Dispatchers.Main).launch {
             val id = database.addQuizToDatabase(QuizData("Name"))
             _creationState.value = _creationState.value.copy(quizID = id)
-            loadQuiz(id)
+            val quiz = database.loadQuizFromDatabase(id)
+            _creationState.value = _creationState.value.copy(quiz = MutableStateFlow(quiz))
+            createNewQuestionAndLoadData(0)
         }
     }
     fun loadQuiz(quizID:String) {
@@ -30,13 +34,20 @@ class QuizCreationViewModel(): ViewModel() {
                 _creationState.value = _creationState.value.copy(quizID = quizID)
                 val quiz = database.loadQuizFromDatabase(quizID)
                 _creationState.value = _creationState.value.copy(quiz = MutableStateFlow(quiz))
-                //loadAllQuestions()
+                loadAllQuestions()
             }
-    }
-}
+        }
 
-    private fun loadAllQuestions() {
-        TODO("Not yet implemented")
+    }
+
+    private suspend fun loadAllQuestions() {
+        val data: List<QuestionData> = database.loadQuestionsFromDatabase(_creationState.value.quizID)
+        data.forEach {
+            _creationState.value.qustionsIDS.add(it.questionID)
+            Log.d("Loading question $it","Loading question $it")
+        }
+        Log.d("LOADED",_creationState.value.qustionsIDS.size.toString())
+        loadDataFromQuestions(0)
     }
 
     fun move(forward: Boolean) {
@@ -97,6 +108,7 @@ class QuizCreationViewModel(): ViewModel() {
     private suspend fun loadDataFromQuestions(i: Int) {
         _creationState.value = _creationState.value.copy(currentQuestion = database.loadQuestionFromDatabase(_creationState.value.quizID,_creationState.value.qustionsIDS[i]))
         _creationState.value.currentQuestion?.let { changeContent(it.content) }
+        loadAnswersFromDatabase()
     }
 
     private suspend fun createNewQuestion() {
@@ -104,11 +116,130 @@ class QuizCreationViewModel(): ViewModel() {
 
         _creationState.value.quiz.value = _creationState.value.quiz.value.copy(numberOfQuestions = _creationState.value.quiz.value.numberOfQuestions+1)
         database.updateContentInDatabase("quizzes", listOf(_creationState.value.quizID), hashMapOf("numberOfQuestions" to _creationState.value.quiz.value.numberOfQuestions))
+
+        Log.d("AAAAAAAAAAAAAAAAAA","${_creationState.value.quiz.value.numberOfQuestions}")
     }
 
     fun changeContent(it: String) {
         _creationState.value = _creationState.value.copy(currentQuestion = creationState.value.currentQuestion?.copy(content = it))
     }
+
+    fun changeShowAddingAnswer(b: Boolean) {
+        _creationState.value = _creationState.value.copy(showingAnswer = b)
+    }
+
+    fun changeAnswerContent(content : String) {
+        _creationState.value = _creationState.value.copy(currentAnswerContent = content)
+    }
+
+    fun changeAnswerCorrectnes(correct : Boolean) {
+        _creationState.value = _creationState.value.copy(currentAnswerCorrectness = correct)
+    }
+    fun changeAnswerPoints(points : String) {
+        _creationState.value = _creationState.value.copy(currentAnswerPoints = points)
+    }
+    private fun createAnswer() {
+        CoroutineScope(Dispatchers.Main).launch {
+            val id: String = database.addAnswerToDatabase(
+                _creationState.value.quizID,
+                _creationState.value.currentQuestion?.questionID ?: "",
+                AnswerData(questionID = _creationState.value.currentQuestion?.questionID ?: "",
+                    points = _creationState.value.currentAnswerPoints.toInt(),
+                    correct = _creationState.value.currentAnswerCorrectness,
+                    content = _creationState.value.currentAnswerContent
+                    )
+            )
+            loadAnswersFromDatabase()
+            _creationState.value = _creationState.value.copy(currentAnswerID = id)
+            resetShownEditAnswerContent()
+        }
+    }
+    fun editAnswer() {
+        if (_creationState.value.currentAnswerID.equals("")) {
+            createAnswer()
+        } else {
+            editExistingAnswer(_creationState.value.currentAnswerID)
+        }
+    }
+
+    private fun loadAnswersFromDatabase() {
+        CoroutineScope(Dispatchers.Main).launch {
+            val answers = withContext(Dispatchers.IO) {
+                database.loadAnswersFromDatabase(quizID = _creationState.value.quizID, questionID = _creationState.value.currentQuestion?.questionID ?: "")
+            }
+            _creationState.value = _creationState.value.copy(answers = answers)
+        }
+
+    }
+
+    private fun editExistingAnswer(currentAnswerID: String) {
+        if(_creationState.value.currentAnswerPoints.equals("")) {
+            changeAnswerPoints("0")
+        }
+        val updateInfo: HashMap<String, Any> = hashMapOf(
+            "points" to _creationState.value.currentAnswerPoints.toInt(),
+            "correct" to _creationState.value.currentAnswerCorrectness,
+            "content" to _creationState.value.currentAnswerContent
+        )
+        resetShownEditAnswerContent()
+        CoroutineScope(Dispatchers.Main).launch {
+            withContext(Dispatchers.IO) {
+                if(currentAnswerID.equals("") || currentAnswerID.equals("answers")) {
+                    Log.e("ERROR","id does not exist")
+                }
+                val path = listOf(
+                    _creationState.value.quizID,
+                    "questions",
+                    _creationState.value.currentQuestion?.questionID ?:"",
+                    "answers",
+                    currentAnswerID
+
+                )
+                path.forEach{Log.d("ERROR",it)}
+                database.updateContentInDatabase(
+                    table = "quizzes",
+                    childPath = path,
+                    updateInfo = updateInfo
+                )
+                loadAnswersFromDatabase()
+            }
+        }
+    }
+
+    private fun resetShownEditAnswerContent() {
+        _creationState.value = _creationState.value.copy(currentAnswerPoints = "0", currentAnswerCorrectness = false, currentAnswerContent = "")
+    }
+
+    fun setCurrentAnswerID(it: String) {
+        _creationState.value = _creationState.value.copy(currentAnswerID = it)
+    }
+
+    fun deleteAnswer() {
+        if(_creationState.value.currentAnswerID.equals("")){
+            return
+        }
+        CoroutineScope(Dispatchers.Main).launch {
+            withContext(Dispatchers.IO) {
+                database.removeAnswerFromDatabase(
+                    quizID =  _creationState.value.quizID,
+                    questionID = _creationState.value.currentQuestion?.questionID
+                    ?: "",
+                    currentAnswerID =  _creationState.value.currentAnswerID,)
+            }
+            loadAnswersFromDatabase()
+        }
+    }
+
+    fun deleteQuiz(nav: () -> Unit) {
+        CoroutineScope(Dispatchers.Main).launch {
+            withContext(Dispatchers.IO) {
+                database.removeQuizFromDatabase(_creationState.value.quizID)
+            }
+        }
+        nav()
+    }
+
+
 }
 
 data class QuizCreationUiState(
@@ -117,5 +248,11 @@ data class QuizCreationUiState(
     val qustionsIDS: ArrayList<String> = arrayListOf(),
     val curentPositionInList: Int = 0,
     val currentQuestion: QuestionData? = null,
-    val questionContent:String = ""
+    val questionContent:String = "",
+    val showingAnswer:Boolean = false,
+    val currentAnswerContent: String = "",
+    val currentAnswerPoints: String = "0",
+    val currentAnswerCorrectness: Boolean = false,
+    val currentAnswerID: String = "",
+    val answers: List<AnswerData> = listOf(),
 )

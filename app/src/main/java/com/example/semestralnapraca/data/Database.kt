@@ -2,10 +2,7 @@ package com.example.semestralnapraca.data
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -133,15 +130,17 @@ class Database {
         }
     }
 
-    suspend fun updateContentInDatabase(table: String, contentID: List<String>, updateInfo: HashMap<String, Any>) {
+    suspend fun updateContentInDatabase(table: String, childPath: List<String>, updateInfo: HashMap<String, Any>) {
         val tablesRef = database.getReference(table)
         var contentRef = tablesRef.ref
 
-        if (!contentID.isEmpty()) {
-            contentID.forEach {
+        if (!childPath.isEmpty()) {
+            childPath.forEach {
+                Log.d("LD", it)
                 contentRef = contentRef.child(it)
             }
         }
+        Log.d("LD", contentRef.key.toString())
         try {
             updateInfo.forEach { (key, value) ->
                 withContext(Dispatchers.IO) {
@@ -181,6 +180,75 @@ class Database {
                 numberOfAnswers = numberOfAnswers,
                 content = content
             )
+        }
+    }
+
+    suspend fun loadQuestionsFromDatabase(quizID: String): List<QuestionData> {
+        return withContext(Dispatchers.IO) {
+            val questionsRef = database.getReference("quizzes").child(quizID).child("questions")
+            val questionList = mutableListOf<QuestionData>()
+
+            val dataSnapshot = questionsRef.get().await()
+            dataSnapshot.children.forEach { questionSnapshot ->
+                val content = questionSnapshot.child("content").getValue(String::class.java) ?: ""
+                val answers = questionSnapshot.child("numberOfAnswers").getValue(Int::class.java) ?: 0
+
+                questionList.add(QuestionData(quizID=quizID, questionID = questionSnapshot.key.toString(), numberOfAnswers = answers, content = content))
+            }
+            questionList
+        }
+    }
+
+    suspend fun addAnswerToDatabase(quizID: String, questionID: String, answerData: AnswerData): String {
+        return withContext(Dispatchers.IO) {
+
+            val answerRef = database.getReference("quizzes").child(quizID).child("questions").child(questionID).child("answers")
+            val newAnswerRef = answerRef.push()
+
+            val id = newAnswerRef.key.toString()
+            val content = answerData.content
+            val points = answerData.points
+            val correct = answerData.correct
+
+            val answerDataHash = hashMapOf(
+                "questionID" to questionID,
+                "content" to content,
+                "points" to points,
+                "correct" to correct
+            )
+            newAnswerRef.setValue(answerDataHash).await()
+            return@withContext id
+        }
+    }
+    suspend fun loadAnswersFromDatabase(quizID: String, questionID: String): List<AnswerData> {
+        return withContext(Dispatchers.IO) {
+            val quizRef = database.getReference("quizzes")
+            val answerList = mutableListOf<AnswerData>()
+            var answersRef = quizRef.child(quizID).child("questions").child(questionID).child("answers")
+
+            val dataSnapshot = answersRef.get().await()
+            dataSnapshot.children.forEach { answerSnapshot ->
+                val content = answerSnapshot.child("content").getValue(String::class.java) ?: ""
+                val correct = answerSnapshot.child("correct").getValue(Boolean::class.java) ?: false
+                val points = answerSnapshot.child("points").getValue(Int::class.java) ?: 0
+
+                answerList.add(AnswerData(
+                    questionID =  questionID,
+                    answerID = answerSnapshot.key.toString(),
+                    points = points,
+                    correct = correct,
+                    content = content
+                ))
+            }
+            answerList
+        }
+    }
+
+    suspend fun removeAnswerFromDatabase(currentAnswerID: String, quizID: String, questionID: String) {
+        Log.d("REMOVING", quizID + questionID + currentAnswerID)
+        withContext(Dispatchers.IO) {
+            val quizzRef = database.getReference("quizzes").child(quizID).child("questions").child(questionID).child("answers").child(currentAnswerID)
+            quizzRef.removeValue().await()
         }
     }
 }

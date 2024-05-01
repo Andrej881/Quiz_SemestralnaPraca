@@ -44,9 +44,9 @@ fun QuizGame() {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.Bottom)
             {
-                BottomBarButton(onClick = {}, icon = R.drawable.back)
-                BottomBarButton(onClick = {}, icon = R.drawable.cancel)
-                BottomBarButton(onClick = {}, icon = R.drawable.next)
+                BarButton(onClick = {}, icon = R.drawable.back)
+                BarButton(onClick = {}, icon = R.drawable.cancel)
+                BarButton(onClick = {}, icon = R.drawable.next)
             }
         },
         modifier = Modifier.fillMaxSize().padding(32.dp)
@@ -81,12 +81,12 @@ fun QuizGame() {
 
             ReadOnlyTField(value = stringResource(id = R.string.answers))
             Spacer(modifier = Modifier.padding(bottom = 25.dp))
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+            AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+            AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+            AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+            AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+            AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+            AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -120,7 +120,7 @@ fun ExtraInformation() {
 }
 
 @Composable
-fun AnswerButton(
+fun AnswerButtonGame(
     answerValue: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit

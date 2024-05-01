@@ -34,4 +34,7 @@
     <string name="edit_quiz">Edit</string>
     <string name="enter_id_of_quiz">Enter ID of quiz</string>
     <string name="id_does_not_exist">Quiz with entered does not exit</string>
+    <string name="answer">Answer</string>
+    <string name="points">Points</string>
+    <string name="delete">Delete</string>
 </resources>
