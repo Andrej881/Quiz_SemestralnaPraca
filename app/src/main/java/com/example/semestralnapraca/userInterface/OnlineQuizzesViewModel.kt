@@ -3,8 +3,11 @@ package com.example.semestralnapraca.userInterface
 import androidx.lifecycle.ViewModel
 import com.example.semestralnapraca.data.Database
 import com.example.semestralnapraca.data.QuizData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class OnlineQuizzesViewModel() : ViewModel() {
     private val database = Database.getInstance()
@@ -17,13 +20,10 @@ class OnlineQuizzesViewModel() : ViewModel() {
     }
 
     fun loadQuizzesFromDatabase(){
-        database.loadQuizzesFromDatabase(object : Database.QuizzesLoadListener {
-            override fun onQuizzesLoaded(quizList: List<QuizData>) {
-                _quizzesState.value = _quizzesState.value.copy(quizzes = quizList)
-            }
-        }, sharedQuizzes = true)
+        CoroutineScope(Dispatchers.Main).launch {
+            _quizzesState.value = _quizzesState.value.copy(quizzes = database.loadQuizzesFromDatabase(sharedQuizzes = true))
+        }
     }
-
     fun searchQuizWihtID(searchedShareID: String) {
         var quizID: String = ""
         _quizzesState.value.quizzes.forEach {

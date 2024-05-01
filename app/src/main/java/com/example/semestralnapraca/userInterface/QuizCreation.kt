@@ -22,6 +22,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ import com.example.semestralnapraca.ui.theme.Color5
 fun QuizCreation(navigateOnCancel: () -> Unit = {},
                  quizCreationViewModel: QuizCreationViewModel = viewModel(),
                  quizID: String ="")  {
-    val quizCreationUiState = quizCreationViewModel.creationState
+    val quizCreationUiState by quizCreationViewModel.creationState.collectAsState()
     LaunchedEffect(quizID) {
         Log.d("CREATION",quizID)
         quizCreationViewModel.loadQuiz(quizID)
@@ -79,15 +80,12 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
                 .background(color = Color1)
         ) {
             item {
-                var number = 1
-                ReadOnlyTField(value = stringResource(id = R.string.question_number) + number)
+                ReadOnlyTField(value = stringResource(id = R.string.question_number) + (quizCreationUiState.curentPositionInList+1))
                 Spacer(modifier = Modifier.padding(bottom = 25.dp))
-
-                var amountInput by remember { mutableStateOf("") }
-
                 TextField(
-                    value = amountInput,
-                    onValueChange = { amountInput = it },
+                    value = quizCreationUiState.currentQuestion?.content ?: "",
+                    onValueChange = { quizCreationViewModel.changeContent(it)
+                        Log.d("changing",it)},
                     label = { Text(stringResource(R.string.enter_question_here))},
                     modifier = Modifier
                         .padding(bottom = 25.dp)

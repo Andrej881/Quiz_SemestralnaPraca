@@ -6,216 +6,180 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class Database {
     private val database = FirebaseDatabase.getInstance()
     companion object {
-        private var instance: Database? = null
+        /*private var instance: Database? = null
         fun getInstance(): Database {
             if (instance == null) {
                 instance = Database()
             }
             return instance!!
+        }*/
+        @Volatile
+        private var instance: Database? = null
+
+        fun getInstance(): Database {
+            return instance ?: synchronized(this) {
+                instance ?: Database().also { instance = it }
+            }
         }
     }
 
-    fun addQuizToDatabase(quiz : QuizData): String {
-        val quizzesRef = database.getReference().child("quizzes")
+    suspend fun addQuizToDatabase(quiz : QuizData): String {
+        return withContext(Dispatchers.IO) {
+            val quizzesRef = database.getReference().child("quizzes")
+            val newQuizRef = quizzesRef.push()
 
-        val newQuizRef = quizzesRef.push()
+            var userID = ""
 
-        var userID = ""
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            currentUser?.let {
+                userID = currentUser.uid
+            }
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        currentUser?.let {
-            userID = currentUser.uid
+            val quizData = hashMapOf(
+                "userID" to userID,
+                "name" to quiz.quizName,
+                "sharedToPublicQuizzes" to quiz.shared.toString(),
+                "shareID" to quiz.quizId,
+                "numberOfQuestions" to quiz.numberOfQuestions,
+                //Add more data
+            )
+
+            newQuizRef.setValue(quizData)
+                .addOnSuccessListener {
+                    Log.d("addQuizToDatabase", "Quiz Added Succesfully")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("addQuizToDatabase","ERROR adding quiz",e)
+                }.await()
+
+            newQuizRef.key.toString()
         }
-
-        val quizData = hashMapOf(
-            "userID" to userID,
-            "name" to quiz.quizName,
-            "sharedToPublicQuizzes" to quiz.shared.toString(),
-            "shareID" to quiz.quizId,
-            "numberOfQuestions" to quiz.numberOfQuestions,
-            //Add more data
-        )
-
-        newQuizRef.setValue(quizData)
-            .addOnSuccessListener {
-                Log.d("addQuizToDatabase", "Quiz Added Succesfully")
-            }
-            .addOnFailureListener { e ->
-                Log.e("addQuizToDatabase","ERROR adding quiz",e)
-            }
-        return newQuizRef.key.toString()
-    }
-    interface QuizLoadListener {
-        fun onQuizLoaded(quiz: QuizData)
     }
 
-    fun loadQuizFromDatabase(quizID: String, listener: QuizLoadListener) {
-        val quizRef = database.getReference("quizzes").child(quizID)
+    suspend fun loadQuizFromDatabase(quizID: String): QuizData {
+        return withContext(Dispatchers.IO) {
+            val quizRef = database.getReference("quizzes").child(quizID)
 
-        quizRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
+            // Use addListenerForSingleValueEvent to retrieve data once
+            val dataSnapshot = quizRef.get().await()
+
+            // Check if dataSnapshot is null or if it doesn't exist
+            if (dataSnapshot.exists()) {
+                // Retrieve values using dataSnapshot
                 val name = dataSnapshot.child("name").getValue(String::class.java) ?: ""
                 val sharing = dataSnapshot.child("sharedToPublicQuizzes").getValue(String::class.java) ?: false.toString()
                 val shareID = dataSnapshot.child("shareID").getValue(String::class.java) ?: ""
                 val numberOfQuestions = dataSnapshot.child("numberOfQuestions").getValue(Int::class.java) ?: 0
 
-                listener.onQuizLoaded(QuizData(name,quizID,sharing.toBoolean(),shareID,numberOfQuestions))
+                // Create and return QuizData object
+                QuizData(name, quizID, sharing.toBoolean(), shareID, numberOfQuestions)
+            } else {
+                // If dataSnapshot is null or doesn't exist, return a default QuizData or handle it as needed
+                QuizData("", "", false, "", 0)
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.e("LoadQuizFromDatabase", "Failed to read value.", error.toException())
-            }
-            })
+        }
     }
-    interface QuizShareLoadListener {
-        fun onQuizzesLoaded(quizShareID: String)
+    suspend fun loadQuizFreeSharingKey(): String {
+        return withContext(Dispatchers.IO) {
+            val codeRef = database.getReference("freeSharingCode")
+            val dataSnapshot = codeRef.get().await()
+            val codeSharingID = dataSnapshot.children.firstOrNull()?.child("code")?.getValue(String::class.java) ?: "0"
+            Log.d("LoadingQuizSharingQuiz", codeSharingID)
+            codeSharingID
+        }
     }
-    fun loadQuizFreeSharingKey(listener: QuizShareLoadListener) {
-        val codeRef = database.getReference("freeSharingCode")
+    suspend fun loadQuizzesFromDatabase(sharedQuizzes: Boolean = false): List<QuizData> {
+        return withContext(Dispatchers.IO) {
+            val quizzesRef = database.getReference("quizzes")
+            val quizList = mutableListOf<QuizData>()
 
-        codeRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val codeSharingID = dataSnapshot.children.elementAt(0).child("code").getValue(String::class.java) ?: "0"
-                Log.d("LoadingQuizSharingQuiz", codeSharingID)
-                listener.onQuizzesLoaded(codeSharingID)
-            }
+            val dataSnapshot = quizzesRef.get().await()
+            dataSnapshot.children.forEach { quizSnapshot ->
+                val name = quizSnapshot.child("name").getValue(String::class.java) ?: ""
+                val sharing = quizSnapshot.child("sharedToPublicQuizzes").getValue(String::class.java) ?: false.toString()
+                val shareID = quizSnapshot.child("shareID").getValue(String::class.java) ?: ""
+                val questions = quizSnapshot.child("numberOfQuestions").getValue(Int::class.java) ?: 0
 
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.e("LoadingQuizSharingQuiz", "Failed to read value.", error.toException())
-            }
+                if (!sharedQuizzes) {
+                    val currentUserID = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                    val userIDinQuiz = quizSnapshot.child("userID").getValue(String::class.java) ?: ""
 
-        })
-    }
-
-    interface QuizzesLoadListener {
-        fun onQuizzesLoaded(quizList: List<QuizData>)
-    }
-    fun loadQuizzesFromDatabase(listener: QuizzesLoadListener, sharedQuizzes: Boolean = false) {
-        val quizzesRef = database.getReference("quizzes")
-
-        val quizList = mutableListOf<QuizData>()
-
-        quizzesRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (quizSnapshot in dataSnapshot.children) {
-                    val name = quizSnapshot.child("name").getValue(String::class.java) ?: ""
-                    val sharing = quizSnapshot.child("sharedToPublicQuizzes").getValue(String::class.java) ?: false.toString()
-                    val shareID = quizSnapshot.child("shareID").getValue(String::class.java) ?: ""
-                    val questions =  quizSnapshot.child("numberOfQuestions").getValue(Int::class.java) ?: 0
-                    if (!sharedQuizzes){
-                        var currentUserID = ""
-                        val userIDinQuiz = quizSnapshot.child("userID").getValue(String::class.java) ?: ""
-                        val currentUser = FirebaseAuth.getInstance().currentUser
-
-                        currentUser?.let {
-                            currentUserID = currentUser.uid
-                        }
-
-                        if (currentUserID.equals(userIDinQuiz)) {
-                            val quiz = QuizData(name, quizSnapshot.key.toString(), shared = sharing.toBoolean(), shareID = shareID, numberOfQuestions = questions)
-                            quizList.add(quiz)
-                        }
-                    } else {
-                        if (sharing.toBoolean()) {
-                            val quiz = QuizData(name, quizSnapshot.key.toString(), shared = sharing.toBoolean(), shareID = shareID, numberOfQuestions = questions)
-                            quizList.add(quiz)
-                        }
-
+                    if (currentUserID == userIDinQuiz) {
+                        val quiz = QuizData(name, quizSnapshot.key.toString(), shared = sharing.toBoolean(), shareID = shareID, numberOfQuestions = questions)
+                        quizList.add(quiz)
                     }
-
+                } else {
+                    if (sharing.toBoolean()) {
+                        val quiz = QuizData(name, quizSnapshot.key.toString(), shared = sharing.toBoolean(), shareID = shareID, numberOfQuestions = questions)
+                        quizList.add(quiz)
+                    }
                 }
-                listener.onQuizzesLoaded(quizList)
             }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                val errorMessage = databaseError.message
-
-                Log.e("Firebase Database", "Error: $errorMessage")
-            }
-
+            quizList
         }
-        )
     }
 
-    fun removeQuizFromDatabase(quizID: String) {
-        val quizzRef = database.getReference("quizzes").child(quizID)
-
-        quizzRef.removeValue()
-            .addOnSuccessListener {
-                Log.d("Database", "Quiz deleted successfully")
-            }
-            .addOnFailureListener { e ->
-                Log.w("Database", "Error deleting quiz", e)
-            }
-    }
-
-    fun updateContentInDatabase(table: String,contentID: String, updateInfo: HashMap<String, String>) {
-        val quizzesRef = database.getReference(table)
-
-        val quizRef = quizzesRef.child(contentID)
-
-        updateInfo.forEach {
-            quizRef.child(it.key).setValue(it.value)
-                .addOnSuccessListener {
-                    Log.d("Database", "${table} updated successfully")
-                }
-                .addOnFailureListener { e ->
-                    Log.w("Database", "Error updating ${table} ", e)
-                }
+    suspend fun removeQuizFromDatabase(quizID: String) {
+        withContext(Dispatchers.IO) {
+            val quizzRef = database.getReference("quizzes").child(quizID)
+            quizzRef.removeValue().await()
         }
-
     }
 
-    fun addQuestionToDatabase(quizID: String,qData: QuestionData) : String{
-        val questionsRef = database.getReference().child("quizzes").child(quizID).child("questions")
-
-        val newQuestionRef = questionsRef.push()
-
-        val questionData = hashMapOf(
-            "numberOfAnswers" to qData.numberOfAnswers,
-            "content" to qData.content,
-            //Add more data
-        )
-
-        newQuestionRef.setValue(questionData)
-            .addOnSuccessListener {
-                Log.d("addQuestionToDatabase","Question Succesfully Added To Database")
+    suspend fun updateContentInDatabase(table: String, contentID: List<String>, updateInfo: HashMap<String, Any>) {
+        val tablesRef = database.getReference(table)
+        var contentRef = tablesRef.ref
+        if (!contentID.isEmpty()) {
+            contentID.forEach {
+                contentRef = contentRef.child(it)
             }
-            .addOnFailureListener { e ->
-                Log.e("addQuestionToDatabase","Error",e)
+        }
+        try {
+            updateInfo.forEach { (key, value) ->
+                withContext(Dispatchers.IO) {
+                    contentRef.child(key).setValue(value).await()
+                }
+                Log.d("Database", "$table updated successfully")
             }
-        return newQuestionRef.key.toString()
+        } catch (e: Exception) {
+            Log.e("Database", "Error updating $table", e)
+        }
     }
-    interface QuestionLoadListener {
-        fun onQuestionLoaded(question: QuestionData)
+
+    suspend fun addQuestionToDatabase(quizID: String, qData: QuestionData): String {
+        return withContext(Dispatchers.IO) {
+            val questionsRef = database.getReference().child("quizzes").child(quizID).child("questions")
+            val newQuestionRef = questionsRef.push()
+            val questionData = hashMapOf(
+                "numberOfAnswers" to qData.numberOfAnswers,
+                "content" to qData.content
+                //Add more data
+            )
+            newQuestionRef.setValue(questionData).await()
+            newQuestionRef.key.toString()
+        }
     }
-    fun loadQuestionFromDatabase(questionID: String, listener: QuestionLoadListener) {
-        val questionRef = database.getReference("questions").child(questionID)
-
-        questionRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val quizID = dataSnapshot.child("quizID").getValue(String::class.java) ?: ""
-                val content = dataSnapshot.child("content").getValue(String::class.java) ?: ""
-                val numberOfAnswers = dataSnapshot.child("numberOfAnswers").getValue(Int::class.java) ?: 0
-
-                listener.onQuestionLoaded(QuestionData(
-                    quizID = quizID,
-                    questionID = questionRef.key.toString(),
-                    numberOfAnswers = numberOfAnswers,
-                    content = content
-                ))
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.e("LoadQuestionFromDatabase", "Failed to read value.", error.toException())
-            }
-        })
+    suspend fun loadQuestionFromDatabase(quizID: String, questionID: String): QuestionData? {
+        return withContext(Dispatchers.IO) {
+            val questionRef = database.getReference("quizzes").child(quizID).child(questionID)
+            val dataSnapshot = questionRef.get().await()
+            val content = dataSnapshot.child("content").getValue(String::class.java) ?: "isEmpty"
+            val numberOfAnswers = dataSnapshot.child("numberOfAnswers").getValue(Int::class.java) ?: 0
+            Log.d("LoadQuestionFromDatabase", questionID)
+            Log.d("LoadQuestionFromDatabase", content)
+            return@withContext QuestionData(
+                quizID = quizID,
+                questionID = questionRef.key.toString(),
+                numberOfAnswers = numberOfAnswers,
+                content = content
+            )
+        }
     }
 }
