@@ -136,6 +136,7 @@ class Database {
     suspend fun updateContentInDatabase(table: String, contentID: List<String>, updateInfo: HashMap<String, Any>) {
         val tablesRef = database.getReference(table)
         var contentRef = tablesRef.ref
+
         if (!contentID.isEmpty()) {
             contentID.forEach {
                 contentRef = contentRef.child(it)
@@ -146,7 +147,7 @@ class Database {
                 withContext(Dispatchers.IO) {
                     contentRef.child(key).setValue(value).await()
                 }
-                Log.d("Database", "$table updated successfully")
+                Log.d("Database", "${contentRef.key.toString()} updated successfully $value ")
             }
         } catch (e: Exception) {
             Log.e("Database", "Error updating $table", e)
@@ -166,13 +167,13 @@ class Database {
             newQuestionRef.key.toString()
         }
     }
-    suspend fun loadQuestionFromDatabase(quizID: String, questionID: String): QuestionData? {
+    suspend fun loadQuestionFromDatabase(quizID: String, questionID: String): QuestionData {
         return withContext(Dispatchers.IO) {
-            val questionRef = database.getReference("quizzes").child(quizID).child(questionID)
+            val questionRef = database.getReference("quizzes").child(quizID).child("questions").child(questionID)
             val dataSnapshot = questionRef.get().await()
             val content = dataSnapshot.child("content").getValue(String::class.java) ?: "isEmpty"
             val numberOfAnswers = dataSnapshot.child("numberOfAnswers").getValue(Int::class.java) ?: 0
-            Log.d("LoadQuestionFromDatabase", questionID)
+
             Log.d("LoadQuestionFromDatabase", content)
             return@withContext QuestionData(
                 quizID = quizID,

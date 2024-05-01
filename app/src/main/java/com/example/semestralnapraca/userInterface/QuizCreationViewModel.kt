@@ -11,15 +11,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class QuizCreationViewModel(
-): ViewModel() {
+class QuizCreationViewModel(): ViewModel() {
     private val _creationState = MutableStateFlow(QuizCreationUiState())
     val creationState: StateFlow<QuizCreationUiState> = _creationState
     val database = Database.getInstance()
     private fun createNewQuiz() {
         CoroutineScope(Dispatchers.Main).launch {
             val id = database.addQuizToDatabase(QuizData("Name"))
-            _creationState.value = _creationState.value.copy(quizID = (id))
+            _creationState.value = _creationState.value.copy(quizID = id)
             loadQuiz(id)
         }
     }
@@ -27,9 +26,10 @@ class QuizCreationViewModel(
         if (quizID.equals("")){
             createNewQuiz()
         } else {
-            _creationState.value = _creationState.value.copy(quizID = quizID)
             CoroutineScope(Dispatchers.Main).launch {
-                _creationState.value = _creationState.value.copy(quiz = MutableStateFlow(database.loadQuizFromDatabase(quizID)))
+                _creationState.value = _creationState.value.copy(quizID = quizID)
+                val quiz = database.loadQuizFromDatabase(quizID)
+                _creationState.value = _creationState.value.copy(quiz = MutableStateFlow(quiz))
                 //loadAllQuestions()
             }
     }
@@ -41,62 +41,69 @@ class QuizCreationViewModel(
 
     fun move(forward: Boolean) {
         var position = _creationState.value.curentPositionInList
-        if (forward) {
-            if (position >= _creationState.value.qustionsIDS.size-1) {
-                createNewQuestion() //Creates question in database with current quizID
-                if (position == 0) {
-                    _creationState.value = _creationState.value.copy(curentPositionInList = (position))
-                    saveQuestionData(position) //Changes data in database of current question(content to currentContent, and numberOfAnswers to number of answers)
-                    return
-                }
-            }
-            _creationState.value = _creationState.value.copy(curentPositionInList = (position + 1))
-            saveQuestionData(position)
-            loadDataFromQuestions(position)//load data from nextPosition()
+        val size = _creationState.value.qustionsIDS.size
 
-        } else {
-
-            if (position > 0) {
-                _creationState.value =
-                    _creationState.value.copy(curentPositionInList = (position - 1))
+        CoroutineScope(Dispatchers.Main).launch {
+            if (size == 0) {
+                createNewQuestionAndLoadData(0)
+            } else if (position == 0 && !forward) {
+                // Do nothing
+            } else if (position == size - 1 && forward) {
                 saveQuestionData(position)
-                loadDataFromQuestions(position - 1)
+                createNewQuestionAndLoadData(position + 1)
+                _creationState.value = _creationState.value.copy(curentPositionInList = position + 1)
+            } else {
+                var newPosition = position
+                if (!forward) {
+                    newPosition -= 1
+                } else {
+                    newPosition += 1
+                }
+                saveQuestionData(position)
+                loadDataFromQuestions(newPosition)
+                _creationState.value = _creationState.value.copy(curentPositionInList = newPosition)
             }
         }
-        _creationState.value.qustionsIDS.forEach(){Log.d("MOVING", it)}
-
     }
 
-    private fun saveQuestionData(position: Int) {
+    private suspend fun createNewQuestionAndLoadData(position: Int) {
+        createNewQuestion()
+        loadDataFromQuestions(position)
+    }
+
+    private suspend fun saveQuestionData(position: Int) {
         val info: HashMap<String, Any> = hashMapOf(
             "content" to (_creationState.value.currentQuestion?.content ?: ""),
             "numberOfAnswers" to (_creationState.value.currentQuestion?.numberOfAnswers ?: 0)
         )
 
-        CoroutineScope(Dispatchers.Main).launch {
-            database.updateContentInDatabase("quizzes",  listOf(
-                _creationState.value.quizID,
-                "questions",
-                _creationState.value.qustionsIDS[position]
-            ),info)
+        val qustionsIDS = _creationState.value.qustionsIDS
+        if (qustionsIDS.isEmpty()) {
+            Log.e("ERROR", "Questions list is empty")
+            return
         }
+        if (qustionsIDS.size == position) {
+            Log.e("ERROR", "position is out of bound")
+            return
+        }
+
+        database.updateContentInDatabase("quizzes",  listOf(
+            _creationState.value.quizID,
+            "questions",
+            qustionsIDS[position]
+        ),info)
     }
 
-    private fun loadDataFromQuestions(i: Int) {
-        CoroutineScope(Dispatchers.Main).launch {
-            _creationState.value = _creationState.value.copy(currentQuestion = database.loadQuestionFromDatabase(_creationState.value.quizID,_creationState.value.qustionsIDS[i]))
-            _creationState.value.currentQuestion?.let { changeContent(it.content) }
-        }
+    private suspend fun loadDataFromQuestions(i: Int) {
+        _creationState.value = _creationState.value.copy(currentQuestion = database.loadQuestionFromDatabase(_creationState.value.quizID,_creationState.value.qustionsIDS[i]))
+        _creationState.value.currentQuestion?.let { changeContent(it.content) }
     }
 
-    private fun createNewQuestion() {
+    private suspend fun createNewQuestion() {
+        _creationState.value.qustionsIDS.add(database.addQuestionToDatabase(_creationState.value.quizID,QuestionData(quizID = _creationState.value.quizID)))
 
-        CoroutineScope(Dispatchers.Main).launch {
-            _creationState.value.qustionsIDS.add(database.addQuestionToDatabase(_creationState.value.quizID,QuestionData(quizID = _creationState.value.quizID)))
-
-            _creationState.value.quiz.value = _creationState.value.quiz.value.copy(numberOfQuestions = _creationState.value.quiz.value.numberOfQuestions+1)
-            database.updateContentInDatabase("quizzes", listOf(_creationState.value.quizID), hashMapOf("numberOfQuestions" to _creationState.value.quiz.value.numberOfQuestions))
-        }
+        _creationState.value.quiz.value = _creationState.value.quiz.value.copy(numberOfQuestions = _creationState.value.quiz.value.numberOfQuestions+1)
+        database.updateContentInDatabase("quizzes", listOf(_creationState.value.quizID), hashMapOf("numberOfQuestions" to _creationState.value.quiz.value.numberOfQuestions))
     }
 
     fun changeContent(it: String) {

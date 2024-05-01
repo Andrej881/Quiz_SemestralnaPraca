@@ -84,8 +84,7 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
                 Spacer(modifier = Modifier.padding(bottom = 25.dp))
                 TextField(
                     value = quizCreationUiState.currentQuestion?.content ?: "",
-                    onValueChange = { quizCreationViewModel.changeContent(it)
-                        Log.d("changing",it)},
+                    onValueChange = { quizCreationViewModel.changeContent(it)},
                     label = { Text(stringResource(R.string.enter_question_here))},
                     modifier = Modifier
                         .padding(bottom = 25.dp)
