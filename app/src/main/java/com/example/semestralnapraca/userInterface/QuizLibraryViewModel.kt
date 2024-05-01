@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class QuizLibraryViewModel(): ViewModel() {
     private val _quizzesState = MutableStateFlow(QuizLibraryUiState())
@@ -17,27 +18,42 @@ class QuizLibraryViewModel(): ViewModel() {
 
     fun loadFreeSharingIDFromDatabase(){
         CoroutineScope(Dispatchers.Main).launch {
-            _quizzesState.value = _quizzesState.value.copy(sharingID = database.loadQuizFreeSharingKey())
+            val sharingID = withContext(Dispatchers.IO) {
+                database.loadQuizFreeSharingKey()
+            }
+            _quizzesState.value = _quizzesState.value.copy(sharingID = sharingID)
         }
     }
     fun loadQuizzesFromDatabase(){
         CoroutineScope(Dispatchers.Main).launch {
-            _quizzesState.value = _quizzesState.value.copy(quizzes = database.loadQuizzesFromDatabase())
+            val quizzes = withContext(Dispatchers.IO) {
+                database.loadQuizzesFromDatabase()
+            }
+            _quizzesState.value = _quizzesState.value.copy(quizzes = quizzes)
         }
     }
 
     fun removeQuiz(quizID: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            database.removeQuizFromDatabase(quizID)
+            withContext(Dispatchers.IO) {
+                database.removeQuizFromDatabase(quizID)
+            }
             loadQuizzesFromDatabase()
         }
     }
 
     fun rename() {
-        val updateInfo: HashMap<String,Any> = hashMapOf(
-            "name" to _quizzesState.value.textForRenaming,)
+        val updateInfo: HashMap<String, Any> = hashMapOf(
+            "name" to _quizzesState.value.textForRenaming
+        )
         CoroutineScope(Dispatchers.Main).launch {
-            database.updateContentInDatabase(table = "quizzes" ,contentID = listOf(_quizzesState.value.quizID), updateInfo)
+            withContext(Dispatchers.IO) {
+                database.updateContentInDatabase(
+                    table = "quizzes",
+                    contentID = listOf(_quizzesState.value.quizID),
+                    updateInfo
+                )
+            }
             _quizzesState.value = _quizzesState.value.copy(quizID = "")
             loadQuizzesFromDatabase()
         }
@@ -61,16 +77,24 @@ class QuizLibraryViewModel(): ViewModel() {
     }
     fun share() {
         val id = _quizzesState.value.sharingID
-        val updateInfo:HashMap<String,Any> = hashMapOf(
+        val updateInfo: HashMap<String, Any> = hashMapOf(
             "sharedToPublicQuizzes" to true.toString(),
             "shareID" to id
         )
         CoroutineScope(Dispatchers.Main).launch {
-            database.updateContentInDatabase(table = "quizzes" ,contentID = listOf(_quizzesState.value.quizID), updateInfo)
+            withContext(Dispatchers.IO) {
+                database.updateContentInDatabase(
+                    table = "quizzes",
+                    contentID = listOf(_quizzesState.value.quizID),
+                    updateInfo
+                )
 
-            database.updateContentInDatabase(table = "freeSharingCode" ,contentID = listOf("code"), hashMapOf(
-                "code" to (id.toInt() + 1).toString()
-            ))
+                database.updateContentInDatabase(
+                    table = "freeSharingCode",
+                    contentID = listOf("code"),
+                    hashMapOf("code" to (id.toInt() + 1).toString())
+                )
+            }
             loadQuizzesFromDatabase()
         }
     }

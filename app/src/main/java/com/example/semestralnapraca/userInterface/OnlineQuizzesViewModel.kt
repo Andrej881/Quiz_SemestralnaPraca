@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class OnlineQuizzesViewModel() : ViewModel() {
     private val database = Database.getInstance()
@@ -21,11 +22,19 @@ class OnlineQuizzesViewModel() : ViewModel() {
 
     fun loadQuizzesFromDatabase(){
         CoroutineScope(Dispatchers.Main).launch {
-            _quizzesState.value = _quizzesState.value.copy(quizzes = database.loadQuizzesFromDatabase(sharedQuizzes = true))
+            try {
+                val quizzes = withContext(Dispatchers.IO) {
+                    database.loadQuizzesFromDatabase(sharedQuizzes = true)
+                }
+                _quizzesState.value = _quizzesState.value.copy(quizzes = quizzes)
+            } catch (e: Exception) {
+                // Handle error here
+                e.printStackTrace()
+            }
         }
     }
     fun searchQuizWihtID(searchedShareID: String) {
-        var quizID: String = ""
+        var quizID = ""
         _quizzesState.value.quizzes.forEach {
             if (it.shareID == searchedShareID) {
                 quizID = it.quizId
