@@ -46,7 +46,8 @@ import com.example.semestralnapraca.ui.theme.Color5
 fun OnlineQuizzes(
     onlineQuizzesViewModel: OnlineQuizzesViewModel = viewModel(),
     modifier: Modifier = Modifier,
-    navigateToQuizGame:(quizID:String) -> Unit = {}
+    navigateToQuizGame: (quizID: String) -> Unit = {},
+    navigateToMainMenu: () -> Unit = {}
 ) {
     onlineQuizzesViewModel.loadQuizzesFromDatabase()
     val quizzesState by onlineQuizzesViewModel.quizzesState.collectAsState()
@@ -56,20 +57,36 @@ fun OnlineQuizzes(
         modifier = Modifier.padding(32.dp)
     ) {
         item {
-            TextField(
-                value = stringResource(R.string.quizzes),
-                textStyle = TextStyle(fontSize = 25.sp,
-                    textAlign = TextAlign.Center),
-                onValueChange = {},
-                readOnly = true,
+            Row(
                 modifier = Modifier
                     .border(width = 5.dp, color = Color5)
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color4,
-                    focusedContainerColor = Color4,
+                    .fillMaxWidth()
+                    .background(Color4),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = navigateToMainMenu,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color4
+                    ),
+                    shape = RectangleShape
+                ) {
+                    Icon(painter = painterResource(id = R.drawable.back), contentDescription = "", Modifier.size(25.dp), tint = Color5)
+                }
+                TextField(
+                    value = stringResource(R.string.quizzes),
+                    textStyle = TextStyle(fontSize = 25.sp,
+                        textAlign = TextAlign.Left),
+                    onValueChange = {},
+                    readOnly = true,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color4,
+                        focusedContainerColor = Color4,
+                    )
                 )
-            )
+            }
+
             SearchID(label = R.string.enter_id_of_quiz,
                 icon = R.drawable.search,
                 searchedQuizID = quizzesState.searchedShareID,

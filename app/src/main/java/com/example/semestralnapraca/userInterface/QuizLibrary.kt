@@ -96,7 +96,7 @@ fun QuizLibrary(
                 TextField(
                     value = stringResource(R.string.my_library),
                     textStyle = TextStyle(fontSize = 25.sp,
-                        textAlign = TextAlign.Center),
+                        textAlign = TextAlign.Left),
                     onValueChange = {},
                     readOnly = true,
                     colors = TextFieldDefaults.colors(

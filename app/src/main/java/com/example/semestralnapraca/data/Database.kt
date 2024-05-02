@@ -49,7 +49,7 @@ class Database {
                 "userID" to userID,
                 "name" to quiz.quizName,
                 "sharedToPublicQuizzes" to quiz.shared.toString(),
-                "shareID" to quiz.quizId,
+                "shareID" to quiz.shareID,
                 "numberOfQuestions" to quiz.numberOfQuestions,
                 "time" to quiz.time.toString()
                 //Add more data

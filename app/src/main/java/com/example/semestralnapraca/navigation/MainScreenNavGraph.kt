@@ -52,14 +52,18 @@ fun MainScreenNavGraph(
         composable(route = Screens.Online.name) {
             OnlineQuizzes( navigateToQuizGame = {navController.navigate(Screens.Game.name)
                 quizID = it
-            })
+            }
+            ) { navController.navigate(Screens.MainMenu.name) }
         }
         composable(route = Screens.Creation.name) {
             QuizCreation (navigateOnCancel =  {navController.navigate(Screens.Library.name)},
                 quizID = quizID)
         }
         composable(route = Screens.Game.name) {
-            QuizGame()
+            QuizGame(
+                quizID = quizID,
+                navigateBack = {navController.navigateUp()}
+            )
         }
         composable(route = Screens.Library.name) {
             QuizLibrary( navigateToQuizGame = {navController.navigate(Screens.Game.name)
