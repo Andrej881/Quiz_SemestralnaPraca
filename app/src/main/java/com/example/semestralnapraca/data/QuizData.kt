@@ -5,5 +5,6 @@ data class QuizData(
     val quizId: String = "",
     val shared: Boolean = false,
     val shareID: String = "",
-    val numberOfQuestions: Int = 0
+    val numberOfQuestions: Int = 0,
+    val time: Int = 0
 )

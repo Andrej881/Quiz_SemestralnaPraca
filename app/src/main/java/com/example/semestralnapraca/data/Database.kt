@@ -2,6 +2,7 @@ package com.example.semestralnapraca.data
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -30,7 +31,12 @@ class Database {
     suspend fun addQuizToDatabase(quiz : QuizData): String {
         return withContext(Dispatchers.IO) {
             val quizzesRef = database.getReference().child("quizzes")
-            val newQuizRef = quizzesRef.push()
+            var newQuizRef: DatabaseReference
+            if (quiz.quizId.equals("")) {
+                newQuizRef = quizzesRef.push()
+            } else {
+                newQuizRef = quizzesRef.child(quiz.quizId)
+            }
 
             var userID = ""
 
@@ -45,6 +51,7 @@ class Database {
                 "sharedToPublicQuizzes" to quiz.shared.toString(),
                 "shareID" to quiz.quizId,
                 "numberOfQuestions" to quiz.numberOfQuestions,
+                "time" to quiz.time.toString()
                 //Add more data
             )
 
@@ -156,7 +163,12 @@ class Database {
     suspend fun addQuestionToDatabase(quizID: String, qData: QuestionData): String {
         return withContext(Dispatchers.IO) {
             val questionsRef = database.getReference().child("quizzes").child(quizID).child("questions")
-            val newQuestionRef = questionsRef.push()
+            val newQuestionRef:DatabaseReference
+            if (qData.questionID.equals("")) {
+                newQuestionRef = questionsRef.push()
+            } else {
+                newQuestionRef = questionsRef.child(qData.questionID)
+            }
             val questionData = hashMapOf(
                 "numberOfAnswers" to qData.numberOfAnswers,
                 "content" to qData.content
@@ -245,9 +257,17 @@ class Database {
     }
 
     suspend fun removeAnswerFromDatabase(currentAnswerID: String, quizID: String, questionID: String) {
-        Log.d("REMOVING", quizID + questionID + currentAnswerID)
+        Log.d("removeAnswerFromDatabase", quizID + questionID + currentAnswerID)
         withContext(Dispatchers.IO) {
             val quizzRef = database.getReference("quizzes").child(quizID).child("questions").child(questionID).child("answers").child(currentAnswerID)
+            quizzRef.removeValue().await()
+        }
+    }
+
+    suspend fun removeQuestionFromDatabase(quizID: String, questionID: String) {
+        Log.d("removeQuestionFromDatabase", quizID + questionID)
+        withContext(Dispatchers.IO) {
+            val quizzRef = database.getReference("quizzes").child(quizID).child("questions").child(questionID)
             quizzRef.removeValue().await()
         }
     }

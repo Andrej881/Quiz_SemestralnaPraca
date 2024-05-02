@@ -1,6 +1,5 @@
 package com.example.semestralnapraca.navigation
 
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -12,13 +11,13 @@ import com.example.semestralnapraca.userInterface.Authorization
 import com.example.semestralnapraca.userInterface.MainMenu
 import com.example.semestralnapraca.userInterface.OnlineQuizzes
 import com.example.semestralnapraca.userInterface.QuizCreation
-import com.example.semestralnapraca.userInterface.QuizCreationViewModel
 import com.example.semestralnapraca.userInterface.QuizGame
 import com.example.semestralnapraca.userInterface.QuizLibrary
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
-var userID:String = ""
+
+var quizID:String = ""
 enum class Screens(@StringRes val title: Int) {
     Authorization(title = R.string.auth),
     MainMenu(title = R.string.menu),
@@ -32,7 +31,6 @@ fun MainScreenNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-
     val startDestination: String
     val currentUser = Firebase.auth.currentUser
     if (currentUser != null) {
@@ -52,20 +50,26 @@ fun MainScreenNavGraph(
                 navigateOnline = { navController.navigate(Screens.Online.name) })
         }
         composable(route = Screens.Online.name) {
-            OnlineQuizzes( navigateToQuizGame = {navController.navigate(Screens.Game.name)})
+            OnlineQuizzes( navigateToQuizGame = {navController.navigate(Screens.Game.name)
+                quizID = it
+            })
         }
         composable(route = Screens.Creation.name) {
             QuizCreation (navigateOnCancel =  {navController.navigate(Screens.Library.name)},
-                quizID = userID)
+                quizID = quizID)
         }
         composable(route = Screens.Game.name) {
             QuizGame()
         }
         composable(route = Screens.Library.name) {
-            QuizLibrary( navigateToQuizGame = {navController.navigate(Screens.Game.name)},
+            QuizLibrary( navigateToQuizGame = {navController.navigate(Screens.Game.name)
+                quizID = it
+                },
                 navigateToQuizCreation = {navController.navigate(Screens.Creation.name)
-                    userID = it
-                })
+                    quizID = it
+                },
+                navigateToMainMenu = {navController.navigate(Screens.MainMenu.name)}
+                )
         }
     }
 }

@@ -146,7 +146,7 @@ fun SearchID(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color2
             )) {
-            Icon(painter = painterResource(id = icon), contentDescription = null, modifier = modifier.size(24.dp))
+            Icon(painter = painterResource(id = icon), contentDescription = null, modifier = modifier.size(24.dp),tint = Color5)
         }
     }
 }

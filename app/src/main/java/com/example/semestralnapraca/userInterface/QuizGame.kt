@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color1
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
+import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
 @Composable
@@ -61,7 +63,7 @@ fun QuizGame() {
         ) {
             var number = 1
             val max = 4
-            ReadOnlyTField(value = stringResource(id = R.string.question_number_playing) + number + "/" + max)
+            ReadOnlyTextField(value = stringResource(id = R.string.question_number_playing) + number + "/" + max)
             Spacer(modifier = Modifier.padding(bottom = 25.dp))
             ExtraInformation()
             Spacer(modifier = Modifier.padding(bottom = 25.dp))
@@ -79,7 +81,7 @@ fun QuizGame() {
                 )
             )
 
-            ReadOnlyTField(value = stringResource(id = R.string.answers))
+            ReadOnlyTextField(value = stringResource(id = R.string.answers))
             Spacer(modifier = Modifier.padding(bottom = 25.dp))
             AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
             AnswerButtonGame("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
@@ -117,6 +119,27 @@ fun ExtraInformation() {
             )
         }
     }
+}
+
+@Composable
+fun ReadOnlyTextField(
+    value : String = "",
+    modifier: Modifier = Modifier
+){
+    TextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(width = 5.dp, color = Color5),
+        value = value,
+        textStyle = TextStyle(fontSize = 25.sp,
+            textAlign = TextAlign.Center),
+        onValueChange = {},
+        readOnly = true,
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color4,
+            focusedContainerColor = Color4,
+        )
+    )
 }
 
 @Composable

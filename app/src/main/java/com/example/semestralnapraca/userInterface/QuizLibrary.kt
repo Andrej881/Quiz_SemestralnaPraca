@@ -1,7 +1,7 @@
 package com.example.semestralnapraca.userInterface
 
-import android.util.Log
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -36,8 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
-import com.example.semestralnapraca.data.Database
-import com.example.semestralnapraca.data.QuizData
+import com.example.semestralnapraca.navigation.Screens
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
@@ -47,8 +48,9 @@ import com.example.semestralnapraca.ui.theme.Color5
 fun QuizLibrary(
     quizLibraryViewModel: QuizLibraryViewModel = viewModel(),
     modifier: Modifier = Modifier,
-    navigateToQuizGame:(quizID:String) -> Unit = {},
-    navigateToQuizCreation:(quizID:String) -> Unit = {},
+    navigateToQuizGame: (quizID: String) -> Unit = {},
+    navigateToQuizCreation: (quizID: String) -> Unit = {},
+    navigateToMainMenu:() -> Unit = {},
 ) {
     quizLibraryViewModel.loadQuizzesFromDatabase()
     val quizzesState by quizLibraryViewModel.quizzesState.collectAsState()
@@ -74,20 +76,35 @@ fun QuizLibrary(
         modifier = Modifier.padding(32.dp)
     ) {
         item {
-            TextField(
-                value = stringResource(R.string.my_library),
-                textStyle = TextStyle(fontSize = 25.sp,
-                    textAlign = TextAlign.Center),
-                onValueChange = {},
-                readOnly = true,
+            Row (
                 modifier = Modifier
                     .border(width = 5.dp, color = Color5)
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color4,
-                    focusedContainerColor = Color4,
+                    .fillMaxWidth()
+                    .background(color = Color4),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Button(
+                    onClick = navigateToMainMenu,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color4
+                    ),
+                    shape = RectangleShape
+                ) {
+                    Icon(painter = painterResource(id = R.drawable.back), contentDescription = "", Modifier.size(25.dp), tint = Color5)
+                }
+                TextField(
+                    value = stringResource(R.string.my_library),
+                    textStyle = TextStyle(fontSize = 25.sp,
+                        textAlign = TextAlign.Center),
+                    onValueChange = {},
+                    readOnly = true,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color4,
+                        focusedContainerColor = Color4,
+                    )
                 )
-            )
+            }
             Spacer(modifier = Modifier.padding(bottom = 50.dp))
         }
 
@@ -254,7 +271,7 @@ fun QuizInLibrary(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = modifier.padding(horizontal = 10.dp, vertical = 10.dp)
             ) {
-                Column {
+                Column (modifier = Modifier.weight(.2f)){
                     QuizButton(
                         onClick = { libraryViewModel.showRenamingDialog(quizID) },
                         icon = R.drawable.rename,
@@ -265,17 +282,19 @@ fun QuizInLibrary(
                         color = Color2)
                 }
                 Button(
+                    modifier = Modifier.weight(.6f),
                     onClick = { libraryViewModel.showPlatOrEditOptionsDialog(quizID) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color3),
                 ) {
                     Text(text = quizName,
-                        fontSize = 25.sp)
+                        fontSize = 25.sp,
+                        color = Color5)
                 }
                 QuizButton(
                     onClick = { libraryViewModel.removeQuiz(quizID) },
                     icon = R.drawable.remove,
                     color = Color4,
-                    modifier = Modifier.padding(bottom = 50.dp)
+                    modifier = Modifier.weight(0.2f)
                 )
             }
         }
@@ -298,7 +317,8 @@ fun QuizButton(
     ) {
         Icon(
             painter = painterResource(id = icon),
-            contentDescription = null,)
+            contentDescription = null,
+            tint = Color5)
     }
 }
 

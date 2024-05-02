@@ -16,7 +16,9 @@ import kotlinx.coroutines.withContext
 class QuizCreationViewModel(): ViewModel() {
     private val _creationState = MutableStateFlow(QuizCreationUiState())
     val creationState: StateFlow<QuizCreationUiState> = _creationState
-    val database = Database.getInstance()
+    private val database = Database.getInstance()
+    private var quizBackUp = QuizBackUp()
+
     private fun createNewQuiz() {
         CoroutineScope(Dispatchers.Main).launch {
             val id = database.addQuizToDatabase(QuizData("Name"))
@@ -28,16 +30,41 @@ class QuizCreationViewModel(): ViewModel() {
     }
     fun loadQuiz(quizID:String) {
         if (quizID.equals("")){
+            _creationState.value = _creationState.value.copy(newQuiz = true)
             createNewQuiz()
         } else {
             CoroutineScope(Dispatchers.Main).launch {
                 _creationState.value = _creationState.value.copy(quizID = quizID)
                 val quiz = database.loadQuizFromDatabase(quizID)
-                _creationState.value = _creationState.value.copy(quiz = MutableStateFlow(quiz))
+                _creationState.value = _creationState.value.copy(
+                    quiz = MutableStateFlow(quiz),
+                    quizName = quiz.quizName,
+                    quizTime = quiz.time.toString()
+                )
                 loadAllQuestions()
+                saveQuizBackUp()
             }
         }
 
+    }
+
+    private suspend fun saveQuizBackUp() {
+        val questions: List<QuestionData> = database.loadQuestionsFromDatabase(_creationState.value.quizID)
+        val answers: ArrayList<AnswerData> = arrayListOf()
+
+        questions.forEach {
+            database.loadAnswersFromDatabase(_creationState.value.quizID,it.questionID)
+            .forEach{
+                answers.add(it)
+            }
+        }
+
+        quizBackUp = quizBackUp.copy(
+            quizID = _creationState.value.quizID,
+            quiz = _creationState.value.quiz.value,
+            questions = questions,
+            answers = answers
+        )
     }
 
     private suspend fun loadAllQuestions() {
@@ -47,7 +74,7 @@ class QuizCreationViewModel(): ViewModel() {
             Log.d("Loading question $it","Loading question $it")
         }
         Log.d("LOADED",_creationState.value.qustionsIDS.size.toString())
-        loadDataFromQuestions(0)
+        loadDataFromQuestion(0)
     }
 
     fun move(forward: Boolean) {
@@ -71,7 +98,7 @@ class QuizCreationViewModel(): ViewModel() {
                     newPosition += 1
                 }
                 saveQuestionData(position)
-                loadDataFromQuestions(newPosition)
+                loadDataFromQuestion(newPosition)
                 _creationState.value = _creationState.value.copy(curentPositionInList = newPosition)
             }
         }
@@ -79,7 +106,7 @@ class QuizCreationViewModel(): ViewModel() {
 
     private suspend fun createNewQuestionAndLoadData(position: Int) {
         createNewQuestion()
-        loadDataFromQuestions(position)
+        loadDataFromQuestion(position)
     }
 
     private suspend fun saveQuestionData(position: Int) {
@@ -105,7 +132,7 @@ class QuizCreationViewModel(): ViewModel() {
         ),info)
     }
 
-    private suspend fun loadDataFromQuestions(i: Int) {
+    private suspend fun loadDataFromQuestion(i: Int) {
         _creationState.value = _creationState.value.copy(currentQuestion = database.loadQuestionFromDatabase(_creationState.value.quizID,_creationState.value.qustionsIDS[i]))
         _creationState.value.currentQuestion?.let { changeContent(it.content) }
         loadAnswersFromDatabase()
@@ -195,7 +222,6 @@ class QuizCreationViewModel(): ViewModel() {
                     currentAnswerID
 
                 )
-                path.forEach{Log.d("ERROR",it)}
                 database.updateContentInDatabase(
                     table = "quizzes",
                     childPath = path,
@@ -231,15 +257,94 @@ class QuizCreationViewModel(): ViewModel() {
     }
 
     fun deleteQuiz(nav: () -> Unit) {
+        if (_creationState.value.newQuiz) {
+            CoroutineScope(Dispatchers.Main).launch {
+                withContext(Dispatchers.IO) {
+                    database.removeQuizFromDatabase(_creationState.value.quizID)
+                }
+            }
+        } else {
+            loadQuizBackUp()
+        }
+        nav()
+    }
+
+    private fun loadQuizBackUp() {
         CoroutineScope(Dispatchers.Main).launch {
             withContext(Dispatchers.IO) {
                 database.removeQuizFromDatabase(_creationState.value.quizID)
+
+                database.addQuizToDatabase(quiz = quizBackUp.quiz)
+                quizBackUp.questions.forEach {
+                    database.addQuestionToDatabase(quizBackUp.quizID,it)
+                }
+                quizBackUp.answers.forEach {
+                    database.addAnswerToDatabase(quizBackUp.quizID,it.questionID,it)
+                }
+            }
+        }
+    }
+
+    fun changeShowSavingQuiz(show: Boolean) {
+        _creationState.value = _creationState.value.copy(saving = show)
+    }
+
+    fun saveQuiz(nav: () -> Unit) {
+        val updateInfo:HashMap<String, Any> = hashMapOf(
+            "name" to _creationState.value.quizName,
+            "time" to _creationState.value.quizTime
+        )
+        CoroutineScope(Dispatchers.Main).launch {
+            withContext(Dispatchers.IO) {
+                saveQuestionData(_creationState.value.curentPositionInList)
+                val path = listOf(
+                    _creationState.value.quizID
+                )
+                database.updateContentInDatabase("quizzes",path,updateInfo)
             }
         }
         nav()
     }
 
+    fun changeNameContent(it: String) {
+        _creationState.value = _creationState.value.copy(quizName = it)
+    }
 
+    fun changeTimeContent(it: String) {
+        _creationState.value = _creationState.value.copy(quizTime = it)
+    }
+
+    fun deleteQuestion() {
+        CoroutineScope(Dispatchers.Main).launch {
+            withContext(Dispatchers.IO) {
+                val questionID =  _creationState.value.qustionsIDS[_creationState.value.curentPositionInList]
+                val size = _creationState.value.qustionsIDS.size
+                changeContent("")
+                if (size < 2) {
+                    _creationState.value.answers.forEach {
+                        _creationState.value = _creationState.value.copy(currentAnswerID = it.answerID)
+                        deleteAnswer()
+                    }
+                    _creationState.value = _creationState.value.copy(currentAnswerID = "")
+                    return@withContext
+                }
+                var position = _creationState.value.curentPositionInList
+                if (position > 0) {
+                    position -= 1
+                    _creationState.value = _creationState.value.copy(curentPositionInList =  position)
+                } else {
+                    _creationState.value = _creationState.value.copy(curentPositionInList =  position)
+                    position += 1
+                }
+                loadDataFromQuestion( position)
+                _creationState.value.quiz.value = _creationState.value.quiz.value.copy(numberOfQuestions = _creationState.value.quiz.value.numberOfQuestions-1)
+                database.removeQuestionFromDatabase(_creationState.value.quizID,questionID)
+                database.updateContentInDatabase("quizzes", listOf(_creationState.value.quizID),
+                    hashMapOf("numberOfQuestions" to _creationState.value.quiz.value.numberOfQuestions))
+                _creationState.value.qustionsIDS.remove(questionID)
+            }
+        }
+    }
 }
 
 data class QuizCreationUiState(
@@ -254,5 +359,17 @@ data class QuizCreationUiState(
     val currentAnswerPoints: String = "0",
     val currentAnswerCorrectness: Boolean = false,
     val currentAnswerID: String = "",
-    val answers: List<AnswerData> = listOf(),
+    val answers: List<AnswerData> = listOf(),//answersOfCurrentShownQuestion
+    val newQuiz:Boolean = false,
+    val saving:Boolean = false,
+    val quizTime:String = "",
+    val quizName: String = "",
+    val quizBackUp: QuizBackUp? = null
+)
+
+data class QuizBackUp(
+    val quizID: String = "",
+    val quiz: QuizData = QuizData(""),
+    val questions: List<QuestionData> = listOf(),
+    val answers: ArrayList<AnswerData> = arrayListOf()
 )

@@ -37,4 +37,6 @@
     <string name="answer">Answer</string>
     <string name="points">Points</string>
     <string name="delete">Delete</string>
+    <string name="saveQuiz">Save Quiz</string>
+    <string name="time">Time in minutes</string>
 </resources>
