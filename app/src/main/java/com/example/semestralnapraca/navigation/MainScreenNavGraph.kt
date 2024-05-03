@@ -16,6 +16,8 @@ import com.example.semestralnapraca.userInterface.QuizLibrary
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
+
+var quizID:String = ""
 enum class Screens(@StringRes val title: Int) {
     Authorization(title = R.string.auth),
     MainMenu(title = R.string.menu),
@@ -48,16 +50,30 @@ fun MainScreenNavGraph(
                 navigateOnline = { navController.navigate(Screens.Online.name) })
         }
         composable(route = Screens.Online.name) {
-            OnlineQuizzes()
+            OnlineQuizzes( navigateToQuizGame = {navController.navigate(Screens.Game.name)
+                quizID = it
+            }
+            ) { navController.navigate(Screens.MainMenu.name) }
         }
         composable(route = Screens.Creation.name) {
-            QuizCreation { navController.navigate(Screens.Library.name) }
+            QuizCreation (navigateOnCancel =  {navController.navigate(Screens.Library.name)},
+                quizID = quizID)
         }
         composable(route = Screens.Game.name) {
-            QuizGame()
+            QuizGame(
+                quizID = quizID,
+                navigateBack = {navController.navigateUp()}
+            )
         }
         composable(route = Screens.Library.name) {
-            QuizLibrary()
+            QuizLibrary( navigateToQuizGame = {navController.navigate(Screens.Game.name)
+                quizID = it
+                },
+                navigateToQuizCreation = {navController.navigate(Screens.Creation.name)
+                    quizID = it
+                },
+                navigateToMainMenu = {navController.navigate(Screens.MainMenu.name)}
+                )
         }
     }
 }

@@ -4,15 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -20,86 +20,108 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color1
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
+import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
 @Composable
-fun QuizGame() {
+fun QuizGame(quizID: String = "",
+             quizGameViewModel: QuizGameViewModel = viewModel(),
+             navigateBack: () -> Unit = {},
+) {
+    val gameUiState by quizGameViewModel.gameUiState.collectAsState()
+    LaunchedEffect(quizID) {
+        quizGameViewModel.loadQuiz(quizID)
+    }
     Scaffold(
         bottomBar = {
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .background(color = Color1),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom)
             {
-                BottomBarButton(onClick = {}, icon = R.drawable.back)
-                BottomBarButton(onClick = {}, icon = R.drawable.cancel)
-                BottomBarButton(onClick = {}, icon = R.drawable.next)
+                BarButton(onClick = {quizGameViewModel.move(forward = false)}, icon = R.drawable.back)
+                BarButton(onClick = navigateBack, icon = R.drawable.cancel)
+                BarButton(onClick = {quizGameViewModel.move(true)}, icon = R.drawable.next)
             }
         },
-        modifier = Modifier.fillMaxSize().padding(32.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp)
     ) {
         innerPadding ->
 
-        Column (
+        LazyColumn (
             modifier = Modifier
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
                 .background(color = Color1),
         ) {
-            var number = 1
-            val max = 4
-            ReadOnlyTField(value = stringResource(id = R.string.question_number_playing) + number + "/" + max)
-            Spacer(modifier = Modifier.padding(bottom = 25.dp))
-            ExtraInformation()
-            Spacer(modifier = Modifier.padding(bottom = 25.dp))
-            TextField(
-                value = "Question",
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier
-                    .padding(bottom = 25.dp)
-                    .fillMaxWidth()
-                    .border(width = 5.dp, color = Color5),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color3,
-                    unfocusedContainerColor = Color3
+            item {
+                ReadOnlyTextField(value = stringResource(id = R.string.question_number_playing) + "${gameUiState.currentQuestionNumber}/${gameUiState.numberOfQuestions}")
+                Spacer(modifier = Modifier.padding(bottom = 25.dp))
+                ExtraInformation(time = gameUiState.quizTime, points = gameUiState.points.toString())
+                Spacer(modifier = Modifier.padding(bottom = 25.dp))
+                TextField(
+                    value = gameUiState.currentQuestionContent,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier
+                        .padding(bottom = 25.dp)
+                        .fillMaxWidth()
+                        .border(width = 5.dp, color = Color5),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color3,
+                        unfocusedContainerColor = Color3
+                    )
                 )
-            )
 
-            ReadOnlyTField(value = stringResource(id = R.string.answers))
-            Spacer(modifier = Modifier.padding(bottom = 25.dp))
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
-            AnswerButton("Answer", onClick = {}, modifier = Modifier.fillMaxWidth())
+                ReadOnlyTextField(value = stringResource(id = R.string.answers))
+                Spacer(modifier = Modifier.padding(bottom = 25.dp))
+            }
+            items(gameUiState.answers) {answer ->
+                AnswerButtonGame(
+                    answerValue = answer.content,
+                    correct = answer.correct,
+                    onClick = {},
+                )
+            }
         }
     }
 }
 
 @Composable
-fun ExtraInformation() {
+fun ExtraInformation(
+    time: String = "",
+    points: String = ""
+) {
     Row (modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center){
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+        ){
         Box(modifier = Modifier
-            .border(width = 5.dp, color = Color5, shape = CircleShape)
-            .padding(15.dp)) {
+            .widthIn(min = 50.dp)
+            .border(width = 5.dp, color = Color5, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
-                text = "3:36",
+                text =  time,
                 textAlign = TextAlign.Center,
                 fontSize = 25.sp
 
@@ -107,10 +129,12 @@ fun ExtraInformation() {
         }
         Spacer(modifier = Modifier.padding(start = 100.dp))
         Box(modifier = Modifier
-            .border(width = 5.dp, color = Color5, shape = CircleShape)
-            .padding(15.dp)) {
+            .widthIn(min = 50.dp)
+            .border(width = 5.dp, color = Color5, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
-                text = "3/20",
+                text = points,
                 textAlign = TextAlign.Center,
                 fontSize = 25.sp
 
@@ -120,23 +144,48 @@ fun ExtraInformation() {
 }
 
 @Composable
-fun AnswerButton(
+fun ReadOnlyTextField(
+    value : String = "",
+    modifier: Modifier = Modifier
+){
+    TextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(width = 5.dp, color = Color5),
+        value = value,
+        textStyle = TextStyle(fontSize = 25.sp,
+            textAlign = TextAlign.Center),
+        onValueChange = {},
+        readOnly = true,
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color4,
+            focusedContainerColor = Color4,
+        )
+    )
+}
+
+@Composable
+fun AnswerButtonGame(
     answerValue: String,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
-    ){
-        Button(
-            modifier = modifier
-                .padding(bottom = 25.dp)
-                .border(width = 5.dp, color = Color5, shape = RectangleShape),
-            onClick = onClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color2
-            ),
-            shape = RectangleShape
-        ) {
-            Text(answerValue)
-        }
+    onClick: () -> Unit,
+    correct: Boolean
+){
+
+
+    Button(
+        modifier = modifier
+            .padding(bottom = 25.dp)
+            .fillMaxWidth()
+            .border(width = 5.dp, color = Color5, shape = RectangleShape),
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color1
+        ),
+        shape = RectangleShape
+    ) {
+        Text(answerValue)
+    }
 }
 
 @Preview(showBackground = true)

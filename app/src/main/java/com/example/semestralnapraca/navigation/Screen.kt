@@ -5,7 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.semestralnapraca.userInterface.Authorization
+
 
 @Composable
 fun Screen(

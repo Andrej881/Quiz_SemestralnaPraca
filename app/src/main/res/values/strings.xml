@@ -25,4 +25,18 @@
     <string name="wrongInfo">Bad Authorization Information</string>
     <string name="ok">OK</string>
     <string name="renaming">Change Name</string>
+    <string name="share">Share</string>
+    <string name="cancel">Cancel</string>
+    <string name="quizz_is_already_shared">Quizz is already shared, Code: %1$s</string>
+    <string name="code">Code : %1$s</string>
+    <string name="quiz_options">Options</string>
+    <string name="play_quiz">Play</string>
+    <string name="edit_quiz">Edit</string>
+    <string name="enter_id_of_quiz">Enter ID of quiz</string>
+    <string name="id_does_not_exist">Quiz with entered does not exit</string>
+    <string name="answer">Answer</string>
+    <string name="points">Points</string>
+    <string name="delete">Delete</string>
+    <string name="saveQuiz">Save Quiz</string>
+    <string name="time">Time in minutes</string>
 </resources>

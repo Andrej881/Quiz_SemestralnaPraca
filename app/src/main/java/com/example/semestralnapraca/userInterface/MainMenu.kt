@@ -95,7 +95,8 @@ fun OptionButton(
                 Icon(
                     painter = painterResource(id = icon),
                     contentDescription = null,
-                    modifier = Modifier.padding(end = 48.dp)
+                    modifier = Modifier.padding(end = 48.dp),
+                    tint = Color5
                 )
             } else {
                 Spacer(modifier = Modifier.padding(end = 72.dp))

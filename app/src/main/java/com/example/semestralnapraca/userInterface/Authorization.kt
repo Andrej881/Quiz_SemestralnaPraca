@@ -153,7 +153,6 @@ fun AuthorizationTextField(
             unfocusedContainerColor = Color2,
             focusedContainerColor = Color2
         )
-
     )
 }
 @Preview(showBackground = true)
