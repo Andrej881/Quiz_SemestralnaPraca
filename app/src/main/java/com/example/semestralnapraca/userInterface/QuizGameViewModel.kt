@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.example.semestralnapraca.data.AnswerData
 import com.example.semestralnapraca.data.Database
 import com.example.semestralnapraca.data.QuestionData
+import com.example.semestralnapraca.data.StatData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,11 +18,13 @@ class QuizGameViewModel: ViewModel() {
     val gameUiState: StateFlow<QuizGameUIState> = _gameUiState
 
     private val database = Database.getInstance()
+    private var countDownTimer: CountDownTimer? = null
 
     fun loadQuiz(quizID: String) {
         if (quizID.equals("")) {
             Log.e("ERROR QuizGameViewModel","error loading quiz: quizID = ''")
         } else {
+            Log.d("loadingQuizGame","loading quiz game $quizID")
             CoroutineScope(Dispatchers.Main).launch {
                 _gameUiState.value = _gameUiState.value.copy(quizID = quizID)
                 val quiz = database.loadQuizFromDatabase(quizID)
@@ -79,7 +82,11 @@ class QuizGameViewModel: ViewModel() {
         if (position == 0 && !forward) {
             // Do nothing
         } else if (position == size - 1 && forward) {
-            changeShowEndQuizAlertField(true)
+            if (_gameUiState.value.showingAnswersOnEnd) {
+                changeShowStats(true)
+            } else {
+                changeShowEndQuizAlertField(true)
+            }
         } else {
             var newPosition = position
             if (!forward) {
@@ -99,18 +106,24 @@ class QuizGameViewModel: ViewModel() {
 
     fun startCountdown(minutes: Long) {
         val milliseconds = minutes * 60 * 1000
-        object : CountDownTimer(milliseconds, 1000) {
+        countDownTimer = object : CountDownTimer(milliseconds, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
                 val minutes = secondsRemaining / 60
                 val seconds = secondsRemaining % 60
                 val timeString = String.format("%02d:%02d", minutes, seconds)
+                Log.d("TIMER", timeString)
                 _gameUiState.value = _gameUiState.value.copy(quizTime = timeString)
             }
             override fun onFinish() {
-                showStats()
+                changeShowStats(true)
             }
         }.start()
+    }
+
+    fun stopCountDown() {
+        countDownTimer?.cancel()
+        countDownTimer = null
     }
 
     fun changeAnswerClickedState(answer : AnswerData) {
@@ -126,12 +139,62 @@ class QuizGameViewModel: ViewModel() {
     }
 
     fun showStats() {
-        var points = 0
-        _gameUiState.value.clickedAnswers.forEach {
-            if(it.correct) points += it.points else points -= it.points
+        CoroutineScope(Dispatchers.Main).launch {
+            var points = 0
+            _gameUiState.value.clickedAnswers.forEach {
+                if(it.correct) points += it.points else points -= it.points
+            }
+            _gameUiState.value = _gameUiState.value.copy(quizTime = _gameUiState.value.quizTime, points = points)
+            calculatePlace()
+            database.addStatToDatabase(
+                _gameUiState.value.quizID,
+                StatData(
+                    quizID = _gameUiState.value.quizID,
+                    timeLeft = _gameUiState.value.quizTime,
+                    points = _gameUiState.value.points
+                    )
+            )
+            changeShowStats(true)
         }
-        _gameUiState.value = _gameUiState.value.copy(timeLeft = _gameUiState.value.quizTime, points = points)
-        changeShowStats(true)
+    }
+
+    private suspend fun calculatePlace() {
+        val stats: List<StatData> = database.loadStatisticsFromDatabase(_gameUiState.value.quizID)
+        var place = stats.size+1
+        stats.forEach {
+            if (_gameUiState.value.points < it.points) {
+                place -= 1
+            } else if (_gameUiState.value.points == it.points && compareTimeAbiggerB(_gameUiState.value.quizTime,it.timeLeft)) {
+                place -= 1
+            }
+        }
+        _gameUiState.value = _gameUiState.value.copy(place = "$place th")
+    }
+
+    private fun compareTimeAbiggerB(A: String, B: String): Boolean {
+        val result:Boolean
+
+        val componentsA = A.split(":")
+        val hoursA = componentsA[0].toIntOrNull() ?: 0
+        val minutesA = componentsA.getOrNull(1)?.toIntOrNull() ?: 0
+
+        val componentsB = B.split(":")
+        val hoursB = componentsB[0].toIntOrNull() ?: 0
+        val minutesB = componentsB.getOrNull(1)?.toIntOrNull() ?: 0
+
+        if (hoursA > hoursB) {
+            result = true
+        } else if (hoursA == hoursB) {
+            result = (minutesA > minutesB)
+        } else {
+            result = false
+        }
+
+        return result
+    }
+    fun changeShowingAnswers(state: Boolean) {
+        _gameUiState.value = _gameUiState.value.copy(showingAnswersOnEnd = state, currentQuestionNumber = 1)
+        loadDataFromQuestion(0)
     }
 
 }
@@ -150,5 +213,6 @@ data class QuizGameUIState(
     val showEndQuiz:Boolean = false,
     val showStats:Boolean = false,
     val maxPoints: Int = 0,
-    val timeLeft: String = "0:00"
+    val place: String = "1th",
+    val showingAnswersOnEnd: Boolean = false
 )

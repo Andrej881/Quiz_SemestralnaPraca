@@ -28,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,6 +92,7 @@ fun Authorization(
                 .fillMaxWidth()
         )
         AuthorizationTextField(
+            password = true,
             label = R.string.password,
             value = authorizationViewModel.password,
             leadingIcon = R.drawable.password,
@@ -140,7 +143,8 @@ fun AuthorizationTextField(
     value: String = "",
     @DrawableRes leadingIcon: Int,
     onValueChanged: (String) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    password: Boolean = false
 ) {
     TextField(
         leadingIcon = { Icon(painter = painterResource(id = leadingIcon), null, tint = Color5) },
@@ -156,8 +160,8 @@ fun AuthorizationTextField(
             focusedLabelColor = Color5,
             focusedTextColor = Color5,
             unfocusedTextColor = Color5
-
-        )
+        ),
+        visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None
     )
 }
 @Preview(showBackground = true)

@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
-import com.example.semestralnapraca.data.AnswerData
 import com.example.semestralnapraca.ui.theme.Color1
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
@@ -55,19 +54,29 @@ fun QuizGame(quizID: String = "",
 ) {
     val gameUiState by quizGameViewModel.gameUiState.collectAsState()
     LaunchedEffect(quizID) {
-        quizGameViewModel.loadQuiz(quizID)
+        if (!gameUiState.quizID.equals(quizID)) {
+            quizGameViewModel.loadQuiz(quizID)
+        }
     }
     StatisticsAlertDialog(
         show = gameUiState.showStats,
         onDismiss = navigateBack,
-        onConfirm = {},
+        onConfirm = {
+            quizGameViewModel.changeShowStats(false)
+            quizGameViewModel.changeShowingAnswers(true)
+        },
         points = "${gameUiState.points}/${gameUiState.maxPoints}",
-        timeLeft = gameUiState.timeLeft
+        timeLeft = gameUiState.quizTime,
+        place = gameUiState.place
     )
     EndGameAlertDialog(
         show = gameUiState.showEndQuiz,
         onDismiss = {quizGameViewModel.changeShowEndQuizAlertField(false)},
-        onConfirm = {quizGameViewModel.showStats()}
+        onConfirm = {
+            quizGameViewModel.stopCountDown()
+            quizGameViewModel.changeShowEndQuizAlertField(false)
+            quizGameViewModel.showStats()
+        }
         )
     Scaffold(
         bottomBar = {
@@ -78,7 +87,11 @@ fun QuizGame(quizID: String = "",
                 verticalAlignment = Alignment.Bottom)
             {
                 BarButton(onClick = {quizGameViewModel.move(forward = false)}, icon = R.drawable.back)
-                BarButton(onClick = navigateBack, icon = R.drawable.cancel)
+                BarButton(onClick = {
+                    quizGameViewModel.stopCountDown()
+                    navigateBack()
+                                    },
+                    icon = R.drawable.cancel)
                 BarButton(onClick = {quizGameViewModel.move(true)}, icon = R.drawable.next)
             }
         },
@@ -116,16 +129,24 @@ fun QuizGame(quizID: String = "",
                 Spacer(modifier = Modifier.padding(bottom = 25.dp))
             }
             items(gameUiState.answers) {answer ->
-                AnswerButtonGame(
-                    answerValue = answer.content,
-                    clicked = gameUiState.clickedAnswers.contains(answer),
-                    onClick = {quizGameViewModel.changeAnswerClickedState(answer)},
-                )
+                if  (gameUiState.showingAnswersOnEnd) {
+                    EndAnswerField(
+                        answerValue = answer.content,
+                        clicked = gameUiState.clickedAnswers.contains(answer),
+                        correct = answer.correct,
+                        points = answer.points
+                    )
+                } else {
+                    AnswerButtonGame(
+                        answerValue = answer.content,
+                        clicked = gameUiState.clickedAnswers.contains(answer),
+                        onClick = {quizGameViewModel.changeAnswerClickedState(answer)},
+                    )
+                }
             }
         }
     }
 }
-
 @Composable
 fun StatisticsAlertDialog(
     show: Boolean,
@@ -134,6 +155,7 @@ fun StatisticsAlertDialog(
     onConfirm: () -> Unit,
     points: String = "0/0",
     timeLeft: String = "0:00",
+    place: String = "1th"
 ) {
     if (show) {
         AlertDialog(onDismissRequest = onDismiss,
@@ -150,7 +172,7 @@ fun StatisticsAlertDialog(
                         fontSize = 25.sp,
                         textAlign = TextAlign.Left,
                         color = Color5)
-                    Text(stringResource(R.string.place),
+                    Text(stringResource(R.string.place) + " $place",
                         fontSize = 25.sp,
                         textAlign = TextAlign.Left,
                         color = Color5)
@@ -264,7 +286,40 @@ fun ReadOnlyTextField(
         )
     )
 }
-
+@Composable
+fun EndAnswerField(
+    answerValue: String = "Answer",
+    clicked: Boolean,
+    correct: Boolean,
+    modifier: Modifier = Modifier,
+    points: Int = 10
+) {
+    val width = if (clicked) 10.dp else 5.dp
+    val id = if (correct) R.drawable.good else R.drawable.cancel
+    TextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 25.dp)
+            .border(width = width, color = Color5),
+        value = answerValue + " [Points: $points]",
+        textStyle = TextStyle(fontSize = 25.sp,
+            textAlign = TextAlign.Center),
+        onValueChange = {},
+        readOnly = true,
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color2,
+            focusedContainerColor = Color2,
+        ),
+        leadingIcon = {
+            Icon(
+                painter = painterResource(id = id),
+                contentDescription = "",
+                tint = Color5,
+                modifier = Modifier.size(25.dp)
+            )
+        }
+    )
+}
 @Composable
 fun AnswerButtonGame(
     answerValue: String,
@@ -310,4 +365,15 @@ fun QuizGamePreview() {
 @Composable
 fun StatisticsAlertDialogPrevie() {
     StatisticsAlertDialog(true,Modifier,{},{})
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EndAnswerFieldPreview() {
+    Column {
+        EndAnswerField(clicked = false, correct = true)
+        EndAnswerField(clicked = false, correct = false)
+        EndAnswerField(clicked = true, correct = true)
+        EndAnswerField(clicked = true, correct = false)
+    }
 }

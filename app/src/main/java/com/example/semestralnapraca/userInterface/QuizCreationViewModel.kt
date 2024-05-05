@@ -290,6 +290,7 @@ class QuizCreationViewModel(): ViewModel() {
     }
 
     fun saveQuiz(nav: () -> Unit) {
+        if (_creationState.value.quizTime.equals("")) _creationState.value = _creationState.value.copy(quizTime = "0")
         val updateInfo:HashMap<String, Any> = hashMapOf(
             "name" to _creationState.value.quizName,
             "time" to _creationState.value.quizTime

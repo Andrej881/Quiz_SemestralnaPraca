@@ -59,8 +59,12 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
                  quizID: String ="")  {
     val quizCreationUiState by quizCreationViewModel.creationState.collectAsState()
     LaunchedEffect(quizID) {
-        Log.d("CREATION",quizID)
-        quizCreationViewModel.loadQuiz(quizID)
+        Log.d("CREATION",quizCreationUiState.quizID + " " + quizID)
+        if ((!quizID.equals(quizCreationUiState.quizID) && !quizID.equals("") )||(quizID.equals(quizCreationUiState.quizID) && quizID.equals(""))) {
+            Log.d("CREATION","called")
+            Log.d("CREATION",quizID)
+            quizCreationViewModel.loadQuiz(quizID)
+        }
     }
     ShowSavingQuizAlerDialog(
         show = quizCreationUiState.saving,

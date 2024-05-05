@@ -88,7 +88,7 @@ class Database {
                 QuizData(name, quizID, sharing.toBoolean(), shareID, numberOfQuestions, loadedTime.toInt())
             } else {
                 // If dataSnapshot is null or doesn't exist, return a default QuizData or handle it as needed
-                QuizData("", "", false, "", 0)
+                QuizData("", "", false, "", 0, 0)
             }
         }
     }
@@ -273,4 +273,48 @@ class Database {
             quizzRef.removeValue().await()
         }
     }
+
+    suspend fun addStatToDatabase(quizID: String, data: StatData): String {
+        return withContext(Dispatchers.IO) {
+            val statisticsRef = database.getReference().child("quizzes").child(quizID).child("statistics")
+            val newStatisticsRef = statisticsRef.push()
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val userID = currentUser?.uid
+            val userEmail = currentUser?.email
+
+            val statisticsData = hashMapOf(
+                "points" to data.points,
+                "timeLeft" to data.timeLeft,
+                "quizID" to quizID,
+                "userID" to userID,
+                "userEmail" to userEmail
+            )
+            newStatisticsRef.setValue(statisticsData).await()
+            newStatisticsRef.key.toString()
+        }
+    }
+    suspend fun loadStatisticsFromDatabase(quizID: String): List<StatData> {
+        return withContext(Dispatchers.IO) {
+            val statRef = database.getReference("quizzes").child(quizID).child("statistics")
+            val statList = mutableListOf<StatData>()
+
+            val dataSnapshot = statRef.get().await()
+            dataSnapshot.children.forEach { statSnapshot ->
+                val points = statSnapshot.child("points").getValue(Int::class.java) ?: 0
+                val timeLeft = statSnapshot.child("timeLeft").getValue(String::class.java) ?: "0:00"
+                val userID = statSnapshot.child("userID").getValue(String::class.java) ?: ""
+                val userEmail = statSnapshot.child("userEmail").getValue(String::class.java) ?: ""
+
+                statList.add(StatData(
+                    points = points,
+                    timeLeft = timeLeft,
+                    userID = userID,
+                    userEmail = userEmail,
+                    quizID = quizID
+                ))
+            }
+            statList
+        }
+    }
+
 }
