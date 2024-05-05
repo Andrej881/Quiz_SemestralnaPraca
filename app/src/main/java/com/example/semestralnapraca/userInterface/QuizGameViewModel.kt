@@ -38,59 +38,66 @@ class QuizGameViewModel: ViewModel() {
     private suspend fun loadAllQuestions() {
         val data: List<QuestionData> = database.loadQuestionsFromDatabase(_gameUiState.value.quizID)
         data.forEach {
-            _gameUiState.value.questionIDS.add(it.questionID)
+            _gameUiState.value.questions.add(it)
             Log.d("Loading question $it","Loading question $it")
         }
-        Log.d("LOADED",_gameUiState.value.questionIDS.size.toString())
+        Log.d("LOADED",_gameUiState.value.questions.size.toString())
+        loadAnswersFromDatabase()
         loadDataFromQuestion(0)
     }
-    private suspend fun loadDataFromQuestion(i: Int) {
-        val question = database.loadQuestionFromDatabase(_gameUiState.value.quizID,_gameUiState.value.questionIDS[i])
+    private fun loadDataFromQuestion(i: Int) {
+        val question = _gameUiState.value.questions[i]
         _gameUiState.value = _gameUiState.value.copy(currentQuestionID = question.questionID, currentQuestionContent = question.content)
-        loadAnswersFromDatabase()
+        showAnswers(question.questionID)
+    }
+
+    private fun showAnswers(questionID: String) {
+        _gameUiState.value = _gameUiState.value.copy(answers = _gameUiState.value.allQuizAnswers[questionID]?: listOf())
     }
 
     private suspend fun loadAnswersFromDatabase() {
-        val answers = database.loadAnswersFromDatabase(
-            quizID = _gameUiState.value.quizID,
-            questionID = _gameUiState.value.currentQuestionID
-        )
-        _gameUiState.value = _gameUiState.value.copy(answers = answers)
+        for (id:QuestionData in _gameUiState.value.questions) {
+            val answers = database.loadAnswersFromDatabase(
+                quizID = _gameUiState.value.quizID,
+                questionID = id.questionID
+            )
+            _gameUiState.value.allQuizAnswers.put(id.questionID,answers)
+        }
     }
 
     fun move(forward: Boolean) {
         var position = _gameUiState.value.currentQuestionNumber-1
-        val size = _gameUiState.value.questionIDS.size
+        val size = _gameUiState.value.questions.size
 
-        CoroutineScope(Dispatchers.Main).launch {
-            if (position == 0 && !forward) {
-                // Do nothing
-            } else if (position == size - 1 && forward) {
-                // endQuiz()
+        if (position == 0 && !forward) {
+            // Do nothing
+        } else if (position == size - 1 && forward) {
+            // endQuiz()
+        } else {
+            var newPosition = position
+            if (!forward) {
+                newPosition -= 1
             } else {
-                var newPosition = position
-                if (!forward) {
-                    newPosition -= 1
-                } else {
-                    newPosition += 1
-                }
-                Log.d("MOVEINGAME", newPosition.toString())
-                loadDataFromQuestion(newPosition)
-                _gameUiState.value = _gameUiState.value.copy(currentQuestionNumber = (newPosition + 1))
+                newPosition += 1
             }
+            Log.d("MOVEINGAME", newPosition.toString())
+            loadDataFromQuestion(newPosition)
+            _gameUiState.value = _gameUiState.value.copy(currentQuestionNumber = (newPosition + 1))
         }
     }
+
 
 
 }
 data class QuizGameUIState(
     val quizID:String = "",
-    val questionIDS: ArrayList<String> = arrayListOf(),
+    val questions: ArrayList<QuestionData> = arrayListOf(),
     val numberOfQuestions:Int = 0,
     val currentQuestionNumber:Int = 1,
     val quizTime:String = "",
     val answers: List<AnswerData> = listOf(),
     val currentQuestionID:String = "",
     val currentQuestionContent:String = "",
-    val points: Int = 0
+    val points: Int = 0,
+    val allQuizAnswers: HashMap<String, List<AnswerData>> = hashMapOf()
 )
