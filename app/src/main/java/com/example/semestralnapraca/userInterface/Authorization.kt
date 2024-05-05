@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -64,8 +65,9 @@ fun Authorization(
             modifier = modifier,
             confirmButton = {
                 TextButton(onClick = {authorizationViewModel.errorMessage = false},
-                    colors = ButtonDefaults.buttonColors(contentColor = Color5)) {
-                    Text(text = stringResource(R.string.ok), color = Color5)
+                    colors = ButtonDefaults.buttonColors(contentColor = Color5,
+                        containerColor = Color.Transparent)) {
+                    Text(text = stringResource(R.string.ok))
                 }
             },
             containerColor = Color2)

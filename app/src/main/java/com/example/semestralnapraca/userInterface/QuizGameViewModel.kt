@@ -162,7 +162,7 @@ class QuizGameViewModel: ViewModel() {
         val stats: List<StatData> = database.loadStatisticsFromDatabase(_gameUiState.value.quizID)
         var place = stats.size+1
         stats.forEach {
-            if (_gameUiState.value.points < it.points) {
+            if (_gameUiState.value.points > it.points) {
                 place -= 1
             } else if (_gameUiState.value.points == it.points && compareTimeAbiggerB(_gameUiState.value.quizTime,it.timeLeft)) {
                 place -= 1

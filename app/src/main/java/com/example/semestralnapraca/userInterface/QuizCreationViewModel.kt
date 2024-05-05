@@ -6,6 +6,7 @@ import com.example.semestralnapraca.data.AnswerData
 import com.example.semestralnapraca.data.Database
 import com.example.semestralnapraca.data.QuestionData
 import com.example.semestralnapraca.data.QuizData
+import com.example.semestralnapraca.data.StatData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +52,7 @@ class QuizCreationViewModel(): ViewModel() {
     private suspend fun saveQuizBackUp() {
         val questions: List<QuestionData> = database.loadQuestionsFromDatabase(_creationState.value.quizID)
         val answers: ArrayList<AnswerData> = arrayListOf()
+        val statistics = database.loadStatisticsFromDatabase(_creationState.value.quizID)
 
         questions.forEach {
             database.loadAnswersFromDatabase(_creationState.value.quizID,it.questionID)
@@ -59,11 +61,13 @@ class QuizCreationViewModel(): ViewModel() {
             }
         }
 
+
         quizBackUp = quizBackUp.copy(
             quizID = _creationState.value.quizID,
             quiz = _creationState.value.quiz.value,
             questions = questions,
-            answers = answers
+            answers = answers,
+            statistics = statistics
         )
     }
 
@@ -281,6 +285,9 @@ class QuizCreationViewModel(): ViewModel() {
                 quizBackUp.answers.forEach {
                     database.addAnswerToDatabase(quizBackUp.quizID,it.questionID,it)
                 }
+                quizBackUp.statistics.forEach {
+                    database.addStatToDatabase(quizBackUp.quizID, it)
+                }
             }
         }
     }
@@ -372,5 +379,6 @@ data class QuizBackUp(
     val quizID: String = "",
     val quiz: QuizData = QuizData(""),
     val questions: List<QuestionData> = listOf(),
-    val answers: ArrayList<AnswerData> = arrayListOf()
+    val answers: ArrayList<AnswerData> = arrayListOf(),
+    val statistics: List<StatData> = listOf()
 )
