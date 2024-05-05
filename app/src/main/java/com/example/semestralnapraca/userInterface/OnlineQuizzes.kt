@@ -151,7 +151,11 @@ fun SearchID(
             onValueChange = onValueChanged,
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color2,
-                focusedContainerColor = Color2
+                focusedContainerColor = Color2,
+                unfocusedLabelColor = Color5,
+                focusedLabelColor = Color5,
+                focusedTextColor = Color5,
+                unfocusedTextColor = Color5
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number

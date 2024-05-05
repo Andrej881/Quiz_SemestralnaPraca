@@ -54,14 +54,16 @@ fun Authorization(
     if (authorizationViewModel.errorMessage) {
         AlertDialog(onDismissRequest = { /* Do nothing */ },
             title = { Text(stringResource(R.string.failed),
-                fontSize = 30.sp) },
+                fontSize = 30.sp,
+                color = Color5) },
             text = { Text(stringResource(R.string.wrongInfo),
-                fontSize = 25.sp) },
+                fontSize = 25.sp,
+                color = Color5) },
             modifier = modifier,
             confirmButton = {
                 TextButton(onClick = {authorizationViewModel.errorMessage = false},
                     colors = ButtonDefaults.buttonColors(contentColor = Color5)) {
-                    Text(text = stringResource(R.string.ok))
+                    Text(text = stringResource(R.string.ok), color = Color5)
                 }
             },
             containerColor = Color2)
@@ -84,9 +86,7 @@ fun Authorization(
             leadingIcon = R.drawable.email,
             onValueChanged = {authorizationViewModel.updateEmail(it)},
             modifier = Modifier
-                .padding(bottom = 32.dp)
-                .fillMaxWidth()
-                .padding(top = 32.dp)
+                .padding(bottom = 32.dp,top = 32.dp)
                 .fillMaxWidth()
         )
         AuthorizationTextField(
@@ -143,7 +143,7 @@ fun AuthorizationTextField(
     modifier: Modifier
 ) {
     TextField(
-        leadingIcon = { Icon(painter = painterResource(id = leadingIcon), null) },
+        leadingIcon = { Icon(painter = painterResource(id = leadingIcon), null, tint = Color5) },
         value = value,
         singleLine = true,
         modifier = modifier.border(width = 5.dp, Color5),
@@ -151,7 +151,12 @@ fun AuthorizationTextField(
         onValueChange = onValueChanged,
         colors = TextFieldDefaults.colors(
             unfocusedContainerColor = Color2,
-            focusedContainerColor = Color2
+            focusedContainerColor = Color2,
+            unfocusedLabelColor = Color5,
+            focusedLabelColor = Color5,
+            focusedTextColor = Color5,
+            unfocusedTextColor = Color5
+
         )
     )
 }

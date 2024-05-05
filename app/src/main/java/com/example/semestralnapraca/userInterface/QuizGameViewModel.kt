@@ -3,7 +3,6 @@ package com.example.semestralnapraca.userInterface
 import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import com.example.semestralnapraca.data.AnswerData
 import com.example.semestralnapraca.data.Database
 import com.example.semestralnapraca.data.QuestionData
@@ -12,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class QuizGameViewModel: ViewModel() {
     private val _gameUiState =  MutableStateFlow(QuizGameUIState())
@@ -65,6 +63,13 @@ class QuizGameViewModel: ViewModel() {
             )
             _gameUiState.value.allQuizAnswers.put(id.questionID,answers)
         }
+        var points = 0
+        for (answers:List<AnswerData> in _gameUiState.value.allQuizAnswers.values) {
+            for (answer:AnswerData in answers) {
+                if (answer.correct) points += answer.points
+            }
+        }
+        _gameUiState.value = _gameUiState.value.copy(maxPoints = points)
     }
 
     fun move(forward: Boolean) {
@@ -74,7 +79,7 @@ class QuizGameViewModel: ViewModel() {
         if (position == 0 && !forward) {
             // Do nothing
         } else if (position == size - 1 && forward) {
-            // endQuiz()
+            changeShowEndQuizAlertField(true)
         } else {
             var newPosition = position
             if (!forward) {
@@ -88,6 +93,10 @@ class QuizGameViewModel: ViewModel() {
         }
     }
 
+    fun changeShowEndQuizAlertField(show: Boolean) {
+        _gameUiState.value = _gameUiState.value.copy(showEndQuiz = show)
+    }
+
     fun startCountdown(minutes: Long) {
         val milliseconds = minutes * 60 * 1000
         object : CountDownTimer(milliseconds, 1000) {
@@ -98,18 +107,31 @@ class QuizGameViewModel: ViewModel() {
                 val timeString = String.format("%02d:%02d", minutes, seconds)
                 _gameUiState.value = _gameUiState.value.copy(quizTime = timeString)
             }
-
             override fun onFinish() {
+                showStats()
             }
         }.start()
     }
 
-    fun changeAnswerClickedState(id : String) {
-        if (_gameUiState.value.clickedAnswers.contains(id)) {
-            _gameUiState.value.clickedAnswers.remove(id)
+    fun changeAnswerClickedState(answer : AnswerData) {
+        if (_gameUiState.value.clickedAnswers.contains(answer)) {
+            _gameUiState.value.clickedAnswers.remove(answer)
         } else {
-            _gameUiState.value.clickedAnswers.add(id)
+            _gameUiState.value.clickedAnswers.add(answer)
         }
+    }
+
+    fun changeShowStats(b: Boolean) {
+        _gameUiState.value = _gameUiState.value.copy(showStats = b)
+    }
+
+    fun showStats() {
+        var points = 0
+        _gameUiState.value.clickedAnswers.forEach {
+            if(it.correct) points += it.points else points -= it.points
+        }
+        _gameUiState.value = _gameUiState.value.copy(timeLeft = _gameUiState.value.quizTime, points = points)
+        changeShowStats(true)
     }
 
 }
@@ -123,6 +145,10 @@ data class QuizGameUIState(
     val currentQuestionID:String = "",
     val currentQuestionContent:String = "",
     val points: Int = 0,
-    val clickedAnswers: ArrayList<String> = arrayListOf(),
-    val allQuizAnswers: HashMap<String, List<AnswerData>> = hashMapOf()
+    val clickedAnswers: ArrayList<AnswerData> = arrayListOf(),
+    val allQuizAnswers: HashMap<String, List<AnswerData>> = hashMapOf(),
+    val showEndQuiz:Boolean = false,
+    val showStats:Boolean = false,
+    val maxPoints: Int = 0,
+    val timeLeft: String = "0:00"
 )

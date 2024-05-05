@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,11 +15,13 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -38,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
+import com.example.semestralnapraca.data.AnswerData
 import com.example.semestralnapraca.ui.theme.Color1
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
@@ -53,6 +57,18 @@ fun QuizGame(quizID: String = "",
     LaunchedEffect(quizID) {
         quizGameViewModel.loadQuiz(quizID)
     }
+    StatisticsAlertDialog(
+        show = gameUiState.showStats,
+        onDismiss = navigateBack,
+        onConfirm = {},
+        points = "${gameUiState.points}/${gameUiState.maxPoints}",
+        timeLeft = gameUiState.timeLeft
+    )
+    EndGameAlertDialog(
+        show = gameUiState.showEndQuiz,
+        onDismiss = {quizGameViewModel.changeShowEndQuizAlertField(false)},
+        onConfirm = {quizGameViewModel.showStats()}
+        )
     Scaffold(
         bottomBar = {
             Row(modifier = Modifier
@@ -102,12 +118,90 @@ fun QuizGame(quizID: String = "",
             items(gameUiState.answers) {answer ->
                 AnswerButtonGame(
                     answerValue = answer.content,
-                    answerID = answer.answerID,
-                    clicked = gameUiState.clickedAnswers.contains(answer.answerID),
-                    onClick = {quizGameViewModel.changeAnswerClickedState(it)},
+                    clicked = gameUiState.clickedAnswers.contains(answer),
+                    onClick = {quizGameViewModel.changeAnswerClickedState(answer)},
                 )
             }
         }
+    }
+}
+
+@Composable
+fun StatisticsAlertDialog(
+    show: Boolean,
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    points: String = "0/0",
+    timeLeft: String = "0:00",
+) {
+    if (show) {
+        AlertDialog(onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.stats),
+                fontSize = 30.sp,
+                color = Color5) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.points) + " $points",
+                        fontSize = 25.sp,
+                        textAlign = TextAlign.Left,
+                        color = Color5)
+                    Text(stringResource(R.string.time_left ) + " $timeLeft",
+                        fontSize = 25.sp,
+                        textAlign = TextAlign.Left,
+                        color = Color5)
+                    Text(stringResource(R.string.place),
+                        fontSize = 25.sp,
+                        textAlign = TextAlign.Left,
+                        color = Color5)
+                }
+            },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = onConfirm,
+                    colors = ButtonDefaults.buttonColors(contentColor = Color5, containerColor = Color.Transparent)) {
+                    Text(text = stringResource(R.string.show_answers))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(contentColor = Color5, containerColor = Color.Transparent)) {
+                    Text(text = stringResource(R.string.end_quiz))
+                }
+            },
+            containerColor = Color2)
+    }
+}
+@Composable
+fun EndGameAlertDialog(
+    show: Boolean,
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    if (show) {
+        AlertDialog(onDismissRequest = onDismiss,
+            title = { Text(stringResource(R.string.end_quiz),
+                fontSize = 30.sp,
+                color = Color5) },
+            text = { Text(stringResource(R.string.end_quiz2),
+                fontSize = 25.sp,
+                textAlign = TextAlign.Center,
+                color = Color5) },
+            modifier = modifier,
+            confirmButton = {
+                TextButton(onClick = onConfirm,
+                    colors = ButtonDefaults.buttonColors(contentColor = Color5, containerColor = Color.Transparent)) {
+                    Text(text = stringResource(R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(contentColor = Color5, containerColor = Color.Transparent)) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            },
+            containerColor = Color2)
     }
 }
 
@@ -175,16 +269,15 @@ fun ReadOnlyTextField(
 fun AnswerButtonGame(
     answerValue: String,
     modifier: Modifier = Modifier,
-    onClick: (String) -> Unit,
+    onClick: () -> Unit,
     clicked: Boolean,
-    answerID:String
 ){
     Button(
         modifier = modifier
             .padding(bottom = 25.dp)
             .fillMaxWidth()
             .border(width = 5.dp, color = Color5, shape = RectangleShape),
-        onClick = { onClick(answerID) },
+        onClick = {onClick()},
         colors = ButtonDefaults.buttonColors(
             containerColor = Color2
         ),
@@ -195,14 +288,13 @@ fun AnswerButtonGame(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Display the answer value
-            Text(answerValue)
-            // Add a checked button based on the clicked state
+            Text(answerValue, color = Color5)
             if (clicked) {
                 Icon(
                     painter = painterResource(id = R.drawable.cancel),
                     modifier = Modifier.size(16.dp),
-                    contentDescription = ""
+                    contentDescription = "",
+                    tint = Color5
                 )
             }
         }
@@ -213,4 +305,9 @@ fun AnswerButtonGame(
 @Composable
 fun QuizGamePreview() {
     QuizGame()
+}
+@Preview(showBackground = true)
+@Composable
+fun StatisticsAlertDialogPrevie() {
+    StatisticsAlertDialog(true,Modifier,{},{})
 }
