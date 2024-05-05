@@ -121,6 +121,7 @@ fun ExtraInformation(
             contentAlignment = Alignment.Center
         ) {
             Text(
+                modifier = Modifier.padding(10.dp),
                 text =  time,
                 textAlign = TextAlign.Center,
                 fontSize = 25.sp
@@ -134,6 +135,7 @@ fun ExtraInformation(
             contentAlignment = Alignment.Center
         ) {
             Text(
+                modifier = Modifier.padding(10.dp),
                 text = points,
                 textAlign = TextAlign.Center,
                 fontSize = 25.sp

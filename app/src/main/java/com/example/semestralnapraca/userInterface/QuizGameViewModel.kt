@@ -1,5 +1,6 @@
 package com.example.semestralnapraca.userInterface
 
+import android.os.CountDownTimer
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
@@ -32,6 +33,7 @@ class QuizGameViewModel: ViewModel() {
                     quizTime = quiz.time.toString()
                 )
                 loadAllQuestions()
+                startCountdown(quiz.time.toLong())
             }
         }
     }
@@ -86,7 +88,21 @@ class QuizGameViewModel: ViewModel() {
         }
     }
 
+    fun startCountdown(minutes: Long) {
+        val milliseconds = minutes * 60 * 1000
+        object : CountDownTimer(milliseconds, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secondsRemaining = millisUntilFinished / 1000
+                val minutes = secondsRemaining / 60
+                val seconds = secondsRemaining % 60
+                val timeString = String.format("%02d:%02d", minutes, seconds)
+                _gameUiState.value = _gameUiState.value.copy(quizTime = timeString)
+            }
 
+            override fun onFinish() {
+            }
+        }.start()
+    }
 
 }
 data class QuizGameUIState(

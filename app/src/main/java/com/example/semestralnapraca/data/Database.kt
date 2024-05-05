@@ -81,9 +81,11 @@ class Database {
                 val sharing = dataSnapshot.child("sharedToPublicQuizzes").getValue(String::class.java) ?: false.toString()
                 val shareID = dataSnapshot.child("shareID").getValue(String::class.java) ?: ""
                 val numberOfQuestions = dataSnapshot.child("numberOfQuestions").getValue(Int::class.java) ?: 0
+                val loadedTime = dataSnapshot.child("time").getValue(String::class.java) ?: "0"
+
 
                 // Create and return QuizData object
-                QuizData(name, quizID, sharing.toBoolean(), shareID, numberOfQuestions)
+                QuizData(name, quizID, sharing.toBoolean(), shareID, numberOfQuestions, loadedTime.toInt())
             } else {
                 // If dataSnapshot is null or doesn't exist, return a default QuizData or handle it as needed
                 QuizData("", "", false, "", 0)
