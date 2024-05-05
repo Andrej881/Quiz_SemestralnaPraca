@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -294,29 +295,30 @@ fun EndAnswerField(
     modifier: Modifier = Modifier,
     points: Int = 10
 ) {
-    val width = if (clicked) 10.dp else 5.dp
+    val color = if (clicked) Color3 else Color2
     val id = if (correct) R.drawable.good else R.drawable.cancel
     TextField(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 25.dp)
-            .border(width = width, color = Color5),
+            .border(width = 5.dp, color = Color5),
         value = answerValue + " [Points: $points]",
-        textStyle = TextStyle(fontSize = 25.sp,
-            textAlign = TextAlign.Center),
+        textStyle = TextStyle(textAlign = TextAlign.Center),
         onValueChange = {},
         readOnly = true,
         colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color2,
-            focusedContainerColor = Color2,
+            unfocusedContainerColor = color,
+            focusedContainerColor = color,
         ),
         leadingIcon = {
-            Icon(
-                painter = painterResource(id = id),
-                contentDescription = "",
-                tint = Color5,
-                modifier = Modifier.size(25.dp)
-            )
+            if (clicked) {
+                Icon(
+                    painter = painterResource(id = id),
+                    contentDescription = "",
+                    tint = Color5,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
         }
     )
 }
