@@ -104,6 +104,14 @@ class QuizGameViewModel: ViewModel() {
         }.start()
     }
 
+    fun changeAnswerClickedState(id : String) {
+        if (_gameUiState.value.clickedAnswers.contains(id)) {
+            _gameUiState.value.clickedAnswers.remove(id)
+        } else {
+            _gameUiState.value.clickedAnswers.add(id)
+        }
+    }
+
 }
 data class QuizGameUIState(
     val quizID:String = "",
@@ -115,5 +123,6 @@ data class QuizGameUIState(
     val currentQuestionID:String = "",
     val currentQuestionContent:String = "",
     val points: Int = 0,
+    val clickedAnswers: ArrayList<String> = arrayListOf(),
     val allQuizAnswers: HashMap<String, List<AnswerData>> = hashMapOf()
 )

@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -25,7 +27,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -98,8 +102,9 @@ fun QuizGame(quizID: String = "",
             items(gameUiState.answers) {answer ->
                 AnswerButtonGame(
                     answerValue = answer.content,
-                    correct = answer.correct,
-                    onClick = {},
+                    answerID = answer.answerID,
+                    clicked = gameUiState.clickedAnswers.contains(answer.answerID),
+                    onClick = {quizGameViewModel.changeAnswerClickedState(it)},
                 )
             }
         }
@@ -170,23 +175,37 @@ fun ReadOnlyTextField(
 fun AnswerButtonGame(
     answerValue: String,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    correct: Boolean
+    onClick: (String) -> Unit,
+    clicked: Boolean,
+    answerID:String
 ){
-
-
     Button(
         modifier = modifier
             .padding(bottom = 25.dp)
             .fillMaxWidth()
             .border(width = 5.dp, color = Color5, shape = RectangleShape),
-        onClick = onClick,
+        onClick = { onClick(answerID) },
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color1
+            containerColor = Color2
         ),
         shape = RectangleShape
     ) {
-        Text(answerValue)
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Display the answer value
+            Text(answerValue)
+            // Add a checked button based on the clicked state
+            if (clicked) {
+                Icon(
+                    painter = painterResource(id = R.drawable.cancel),
+                    modifier = Modifier.size(16.dp),
+                    contentDescription = ""
+                )
+            }
+        }
     }
 }
 
