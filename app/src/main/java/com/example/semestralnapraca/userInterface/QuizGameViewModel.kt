@@ -12,16 +12,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
+/**
+ * viewModel pre QuizGame
+ * */
 class QuizGameViewModel: ViewModel() {
     private val _gameUiState =  MutableStateFlow(QuizGameUIState())
     val gameUiState: StateFlow<QuizGameUIState> = _gameUiState
 
     private val database = Database.getInstance()
     private var countDownTimer: CountDownTimer? = null
-
+    /**
+     * Pokúsi sa načítať kvíz
+     * @param quizID id kvízu
+     * */
     fun loadQuiz(quizID: String) {
-        if (quizID.equals("")) {
+        if (quizID == "") {
             Log.e("ERROR QuizGameViewModel","error loading quiz: quizID = ''")
         } else {
             Log.d("loadingQuizGame","loading quiz game $quizID")
@@ -64,7 +69,7 @@ class QuizGameViewModel: ViewModel() {
                 quizID = _gameUiState.value.quizID,
                 questionID = id.questionID
             )
-            _gameUiState.value.allQuizAnswers.put(id.questionID,answers)
+            _gameUiState.value.allQuizAnswers[id.questionID] = answers
         }
         var points = 0
         for (answers:List<AnswerData> in _gameUiState.value.allQuizAnswers.values) {
@@ -74,9 +79,13 @@ class QuizGameViewModel: ViewModel() {
         }
         _gameUiState.value = _gameUiState.value.copy(maxPoints = points)
     }
-
+    /**
+     * Logika presunu z jednej otázky kvízu na inú
+     *
+     * @param forward či sa presúva na následujúcu otázku(true) alebo predchádzajúcu(false)
+     * */
     fun move(forward: Boolean) {
-        var position = _gameUiState.value.currentQuestionNumber-1
+        val position = _gameUiState.value.currentQuestionNumber-1
         val size = _gameUiState.value.questions.size
 
         if (position == 0 && !forward) {
@@ -99,19 +108,21 @@ class QuizGameViewModel: ViewModel() {
             _gameUiState.value = _gameUiState.value.copy(currentQuestionNumber = (newPosition + 1))
         }
     }
-
+    /**
+     * @param show nastaví showEndQuiz v gameUiState
+     * */
     fun changeShowEndQuizAlertField(show: Boolean) {
         _gameUiState.value = _gameUiState.value.copy(showEndQuiz = show)
     }
 
-    fun startCountdown(minutes: Long) {
+    private fun startCountdown(minutes: Long) {
         val milliseconds = minutes * 60 * 1000
         countDownTimer = object : CountDownTimer(milliseconds, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secondsRemaining = millisUntilFinished / 1000
-                val minutes = secondsRemaining / 60
+                val min = secondsRemaining / 60
                 val seconds = secondsRemaining % 60
-                val timeString = String.format("%02d:%02d", minutes, seconds)
+                val timeString = String.format("%02d:%02d", min, seconds)
                 Log.d("TIMER", timeString)
                 _gameUiState.value = _gameUiState.value.copy(quizTime = timeString)
             }
@@ -120,12 +131,17 @@ class QuizGameViewModel: ViewModel() {
             }
         }.start()
     }
-
+    /**
+     * Ukončí odpočet
+     * */
     fun stopCountDown() {
         countDownTimer?.cancel()
         countDownTimer = null
     }
-
+    /**
+     * Bud pridá do zoznamu kliknutých otazok otázku alebo ju odoberie
+     * @param answer otázka, ktorá sa pridáva alebo odoberá
+     * */
     fun changeAnswerClickedState(answer : AnswerData) {
         if (_gameUiState.value.clickedAnswers.contains(answer)) {
             _gameUiState.value.clickedAnswers.remove(answer)
@@ -133,11 +149,15 @@ class QuizGameViewModel: ViewModel() {
             _gameUiState.value.clickedAnswers.add(answer)
         }
     }
-
-    fun changeShowStats(b: Boolean) {
-        _gameUiState.value = _gameUiState.value.copy(showStats = b)
+    /**
+     * @param show nastaví showStats v gameUiState
+     * */
+    fun changeShowStats(show: Boolean) {
+        _gameUiState.value = _gameUiState.value.copy(showStats = show)
     }
-
+    /**
+     * Načíta statistiky z databázi a vyhodnotí pozíciu hráča
+     * */
     fun showStats() {
         CoroutineScope(Dispatchers.Main).launch {
             var points = 0
@@ -170,34 +190,59 @@ class QuizGameViewModel: ViewModel() {
         }
         _gameUiState.value = _gameUiState.value.copy(place = "$place th")
     }
-
-    private fun compareTimeAbiggerB(A: String, B: String): Boolean {
+    /**
+     * pomocou chatGPT
+     * */
+    private fun compareTimeAbiggerB(a: String, b: String): Boolean {
         val result:Boolean
 
-        val componentsA = A.split(":")
+        val componentsA = a.split(":")
         val hoursA = componentsA[0].toIntOrNull() ?: 0
         val minutesA = componentsA.getOrNull(1)?.toIntOrNull() ?: 0
 
-        val componentsB = B.split(":")
+        val componentsB = b.split(":")
         val hoursB = componentsB[0].toIntOrNull() ?: 0
         val minutesB = componentsB.getOrNull(1)?.toIntOrNull() ?: 0
 
-        if (hoursA > hoursB) {
-            result = true
+        result = if (hoursA > hoursB) {
+            true
         } else if (hoursA == hoursB) {
-            result = (minutesA > minutesB)
+            (minutesA > minutesB)
         } else {
-            result = false
+            false
         }
 
         return result
     }
+    /**
+     * Nastavi showingAnswersOnEnd na state a currentQuestionNumber na 1 a načíta odpovede
+     * */
     fun changeShowingAnswers(state: Boolean) {
         _gameUiState.value = _gameUiState.value.copy(showingAnswersOnEnd = state, currentQuestionNumber = 1)
         loadDataFromQuestion(0)
     }
 
 }
+/**
+ * data potrebné ore viewModel
+ *
+ * @param quizID id kvízu
+ * @param questions zoznam otázok
+ * @param numberOfQuestions počet otázok
+ * @param currentQuestionNumber čislo momentálnej otázky
+ * @param quizTime momentalny čas na dokončenie kvízu
+ * @param answers zoznam odpovedí momentálnej otázky
+ * @param currentQuestionID id momentálnej otázky
+ * @param currentQuestionContent obsah momentálnej otázky
+ * @param points počet získanych bodov
+ * @param clickedAnswers zoznam stlačených odpovedí
+ * @param allQuizAnswers hashmapa všetkých odpovedí
+ * @param showEndQuiz rozhoduje či sa ma ukázať okno na potvrdenie ukončenia kvízu
+ * @param showStats rozhoduje či sa má ukázať okno zo štatistikami
+ * @param maxPoints maximálny počet bodov
+ * @param place umiestnenie v tabuľke
+ * @param showingAnswersOnEnd či sa majú ukazovať odpovede na konci na ukážku výsledkov
+ * */
 data class QuizGameUIState(
     val quizID:String = "",
     val questions: ArrayList<QuestionData> = arrayListOf(),

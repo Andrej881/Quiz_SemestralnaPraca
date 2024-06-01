@@ -53,14 +53,26 @@ import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
+/**
+ * Obrazovka Tvorenia kvízu
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param quizCreationViewModel viewModel obrazovky
+ * @param navigateOnCancel funkcia, ktorá zabezpečí navigáciu po zrušení tvorby kvízu
+ * @param quizID id tvoreného kvízu
+ * */
 @Composable
-fun QuizCreation(navigateOnCancel: () -> Unit = {},
-                 quizCreationViewModel: QuizCreationViewModel = viewModel(),
-                 quizID: String ="")  {
+fun QuizCreation(
+    modifier: Modifier = Modifier,
+    navigateOnCancel: () -> Unit = {},
+    quizCreationViewModel: QuizCreationViewModel = viewModel(),
+    quizID: String =""
+)
+{
     val quizCreationUiState by quizCreationViewModel.creationState.collectAsState()
     LaunchedEffect(quizID) {
         Log.d("CREATION",quizCreationUiState.quizID + " " + quizID)
-        if ((!quizID.equals(quizCreationUiState.quizID) && !quizID.equals("") )||(quizID.equals(quizCreationUiState.quizID) && quizID.equals(""))) {
+        if ((quizID != quizCreationUiState.quizID && quizID != "")||(quizID == quizCreationUiState.quizID && quizID == "")) {
             Log.d("CREATION","called")
             Log.d("CREATION",quizID)
             quizCreationViewModel.loadQuiz(quizID)
@@ -68,7 +80,7 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
     }
     ShowSavingQuizAlerDialog(
         show = quizCreationUiState.saving,
-        onDismis = {quizCreationViewModel.changeShowSavingQuiz(false)},
+        onDismiss = {quizCreationViewModel.changeShowSavingQuiz(false)},
         onConfirm = {
             quizCreationViewModel.saveQuiz(navigateOnCancel)
             quizCreationViewModel.changeShowSavingQuiz(false)
@@ -80,12 +92,12 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
     )
     ShowEditingAnswerAlertDialog(
         show = quizCreationUiState.showingAnswer,
-        onDismis = {quizCreationViewModel.changeShowAddingAnswer(false)},
+        onDismiss = {quizCreationViewModel.changeShowAddingAnswer(false)},
         onDelete = {quizCreationViewModel.deleteAnswer()
             quizCreationViewModel.changeShowAddingAnswer(false)},
         points = quizCreationUiState.currentAnswerPoints,
         onContentUpdate = {quizCreationViewModel.changeAnswerContent(it)},
-        onCorrectChanged = {quizCreationViewModel.changeAnswerCorrectnes(it)},
+        onCorrectChanged = {quizCreationViewModel.changeAnswerCorrectness(it)},
         onPointsUpdate = {quizCreationViewModel.changeAnswerPoints(it)},
         content = quizCreationUiState.currentAnswerContent,
         correct =  quizCreationUiState.currentAnswerCorrectness,
@@ -138,7 +150,7 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
                 .background(color = Color1)
         ) {
             item {
-                QuestionTextField(value = stringResource(id = R.string.question_number) + (quizCreationUiState.curentPositionInList+1),
+                QuestionTextField(value = stringResource(id = R.string.question_number) + (quizCreationUiState.currentPositionInList+1),
                     remove = {quizCreationViewModel.deleteQuestion()})
                 Spacer(modifier = Modifier.padding(bottom = 25.dp))
                 TextField(
@@ -173,12 +185,23 @@ fun QuizCreation(navigateOnCancel: () -> Unit = {},
 
     }
 }
-
+/**
+ * Ukáže okno pri ukladaní
+ *
+ * @param show rozhoduje či sa má upozornenie ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param onDismiss funkcia sa zavolá pri zrušení okna
+ * @param onConfirm funcia sa zavolá pri potvrdení okna
+ * @param name meno kvízu
+ * @param time čas na dokončenie kvízu
+ * @param onTimeUpdate čo sa stane pri zmene poľa nastavujúceho čas
+ * @param onNameUpdate čo sa stane pri zmene poľa nastavujúceho meno
+ * */
 @Composable
 fun ShowSavingQuizAlerDialog(
     show: Boolean,
     modifier: Modifier = Modifier,
-    onDismis: () -> Unit,
+    onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     name: String,
     time: String,
@@ -186,10 +209,10 @@ fun ShowSavingQuizAlerDialog(
     onNameUpdate: (String) -> Unit
 ) {
     if (show) {
-        AlertDialog(onDismissRequest = onDismis,
+        AlertDialog(onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.saveQuiz), color = Color5) },
             text = {
-                Column() {
+                Column {
                     TextField(
                         value = name,
                         modifier = Modifier
@@ -238,7 +261,7 @@ fun ShowSavingQuizAlerDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = onDismis) {
+                TextButton(onClick = onDismiss) {
                     Text(text = stringResource(R.string.cancel),
                         fontSize = 20.sp,
                         color = Color5)
@@ -247,12 +270,25 @@ fun ShowSavingQuizAlerDialog(
             containerColor = Color2)
     }
 }
-
+/**
+ * Ukáže okno pri úprave parametrov odpovede
+ *
+ * @param show rozhoduje či sa má upozornenie ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param onDismiss funkcia sa zavolá pri zrušení okna
+ * @param onConfirm funcia sa zavolá pri potvrdení okna
+ * @param onDelete funcia sa zavolá po stlačení tlačidľa delete
+ * @param onContentUpdate čo sa stane pri zmene poľa nastavujúceho obsah odpovede
+ * @param onPointsUpdate čo sa stane pri zmene poľa nastavujúceho počet získanych bodov
+ * @param content obsah odpovede
+ * @param correct či je odpoveď správna
+ * @param onCorrectChanged čo sa stane pri zmene správnosti
+ * */
 @Composable
 fun ShowEditingAnswerAlertDialog(
     show:Boolean,
     points: String,
-    onDismis: () -> Unit,
+    onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     onDelete: () -> Unit,
     onContentUpdate: (String) -> Unit,
@@ -263,10 +299,10 @@ fun ShowEditingAnswerAlertDialog(
     onCorrectChanged: (Boolean) -> Unit
 ) {
     if (show) {
-        AlertDialog(onDismissRequest = onDismis,
+        AlertDialog(onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.answer), color = Color5) },
             text = {
-                Column() {
+                Column {
                     TextField(
                         value = content,
                         modifier = Modifier
@@ -340,7 +376,7 @@ fun ShowEditingAnswerAlertDialog(
                         fontSize = 20.sp,
                         color = Color5)
                 }
-                TextButton(onClick = onDismis) {
+                TextButton(onClick = onDismiss) {
                     Text(text = stringResource(R.string.cancel),
                         fontSize = 20.sp,
                         color = Color5)
@@ -349,7 +385,13 @@ fun ShowEditingAnswerAlertDialog(
             containerColor = Color2)
     }
 }
-
+/**
+ * Tlačidlo na okraji obrazovky
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param icon Ikona tlačidľa
+ * @param onClick funckia, ktorá sa vykoná po stlačení tlačidla
+ * */
 @Composable
 fun BarButton(
     modifier: Modifier = Modifier,
@@ -369,6 +411,12 @@ fun BarButton(
     }
 }
 
+/**
+ * Tlačidlo na pridávanie odpovedí
+ *
+ * @param onClick funkcia, ktorá sa vykoná po stlačení
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * */
 @Composable
 fun AddAnswerButton(
     onClick: () -> Unit,
@@ -386,13 +434,22 @@ fun AddAnswerButton(
     }
 }
 
+/**
+ * Jednotlivé odpovede ukázane na obrazovke
+ *
+ * @param answerID id odpovede
+ * @param value obsah odpvoede
+ * @param points po4et bodov za odpoved
+ * @param onClick funkcia, ktorá sa stane po stlačení odpovede
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * */
 @Composable
 fun AnswerButton(
+    modifier: Modifier = Modifier,
     answerID: String = "",
     value: String = "",
     points: String = "",
-    onClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    onClick: (String) -> Unit = {}
 ) {
     Button(
         onClick = { onClick(answerID)},
@@ -427,10 +484,17 @@ fun AnswerButton(
     }
 }
 
+/**
+ * Textove pole, do ktorého sa zapisuje odpoved
+ *
+ * @param value obsah odpovede
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param remove funkcia, ktorá sa vykoná po odstránení odpovede
+ * */
 @Composable
 fun QuestionTextField(
-    value : String = "",
     modifier: Modifier = Modifier,
+    value : String = "",
     remove: () -> Unit = {}
 ){
     Row(
@@ -465,18 +529,24 @@ fun QuestionTextField(
     }
 }
 
+/**
+ * Preview pre obrazovku
+ * */
 @Preview(showBackground = true)
 @Composable
 fun QuizCreationPreview() {
     QuizCreation()
 }
 
+/**
+ * Preview pre okna na upravu odpovede
+ * */
 @Preview(showBackground = true)
 @Composable
 fun ShowAddingAnswerAlertDialogPreview() {
     ShowEditingAnswerAlertDialog(
         show = true,
-        onDismis = {},
+        onDismiss = {},
         points = "",
         onContentUpdate = {},
         onCorrectChanged = {},
@@ -488,8 +558,11 @@ fun ShowAddingAnswerAlertDialogPreview() {
     )
 }
 
+/**
+ * Preview na ukážku jednotlivej odpovede
+ * */
 @Preview(showBackground = true)
 @Composable
 fun ShowAnswerFieldPreview() {
-    AnswerButton(value = "AnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswerAnswer", points = "1000")
+    AnswerButton(value = "Answer", points = "1000")
 }

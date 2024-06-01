@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.userInterface.Authorization
 import com.example.semestralnapraca.userInterface.MainMenu
@@ -18,6 +19,9 @@ import com.google.firebase.auth.auth
 
 
 var quizID:String = ""
+/**
+ * enum Obrazoviek aplikácie
+ * */
 enum class Screens(@StringRes val title: Int) {
     Authorization(title = R.string.auth),
     MainMenu(title = R.string.menu),
@@ -26,10 +30,16 @@ enum class Screens(@StringRes val title: Int) {
     Game(title = R.string.game),
     Library(title = R.string.libr)
 }
+/**
+ * Rieší riadenie toho na akej sa momentalne nachadzate obrazovke
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param navController riadi navigaciu medzi obrazovkami
+ * */
 @Composable
 fun MainScreenNavGraph(
-    navController: NavHostController,
     modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()
 ) {
     val startDestination: String
     val currentUser = Firebase.auth.currentUser

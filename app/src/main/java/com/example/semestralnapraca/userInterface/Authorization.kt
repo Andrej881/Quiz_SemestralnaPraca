@@ -1,7 +1,6 @@
 package com.example.semestralnapraca.userInterface
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,20 +9,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.AbsoluteCutCornerShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import  androidx.tv.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,26 +30,26 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.tv.material3.Border
-import androidx.tv.material3.ExperimentalTvMaterial3Api
-import androidx.tv.material3.OutlinedButtonDefaults
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color2
-import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
-import kotlinx.coroutines.launch
 
-
+/**
+* Prihlasovanie do firebase UI
+* Spravená podľa tutorialu https://firebase.google.com/docs/auth/android/start
+*
+* @param modifier modifier upravujúci vlastnosti obrazovky
+* @param authorizationViewModel viewModel obrazovky
+* @param onNavigateUp funkcia, ktorá zabezpečí navigáciu na daľšiu obrazovku po úspešnom prihlásení
+* */
 @Composable
 fun Authorization(
+    modifier: Modifier = Modifier,
     authorizationViewModel: AuthorizationViewModel = viewModel(),
-    onNavigateUp: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onNavigateUp: () -> Unit = {}
 ) {
-    val coroutineScope = rememberCoroutineScope()
     if (authorizationViewModel.errorMessage) {
         AlertDialog(onDismissRequest = { /* Do nothing */ },
             title = { Text(stringResource(R.string.failed),
@@ -73,7 +69,6 @@ fun Authorization(
             containerColor = Color2)
     }
 
-    //val authorizationUiState by authorizationViewModel.uiState.collectAsState()
     Column(
         modifier = Modifier
             .statusBarsPadding()
@@ -118,6 +113,13 @@ fun Authorization(
     }
 }
 
+/**
+ * Tlačidlo na obrazovke
+ *
+ * @param onClick Funkcia rozhodujúca čo sa má stať po stlačení
+ * @param text text napísani na tlačidlu
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * */
 @Composable
 fun AuthorizationButton(
     onClick: () -> Unit,
@@ -139,6 +141,15 @@ fun AuthorizationButton(
     }
 }
 
+/**
+ * Poľe, do ktorého sa zapisujú informácie pre prihlásenie
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param label označenie textoveho poľa
+ * @param leadingIcon ikona poľa
+ * @param onValueChanged funkcia, ktorá sa ma zavolať pri zmene hodnoty poľa
+ * @param password či má poľe namiesto písaneho textu ukazovať iba ***
+ * */
 @Composable
 fun AuthorizationTextField(
     label: Int,
@@ -166,6 +177,9 @@ fun AuthorizationTextField(
         visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None
     )
 }
+/**
+ * Preview obrazovky
+ * */
 @Preview(showBackground = true)
 @Composable
 fun AuthorizationPreview() {

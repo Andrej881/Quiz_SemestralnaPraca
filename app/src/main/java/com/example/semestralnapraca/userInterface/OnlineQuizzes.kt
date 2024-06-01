@@ -42,10 +42,18 @@ import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
+/**
+ * Obrazovka výpisu zdielaných kvízov
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param onlineQuizzesViewModel viewModel obrazovky
+ * @param navigateToQuizGame funkcia, ktorá zabezpečí navigáciu do vybraného kvízu
+ * @param navigateToMainMenu funkcia, ktorá zabezpečí navigáciu do Main Menu
+ * */
 @Composable
 fun OnlineQuizzes(
-    onlineQuizzesViewModel: OnlineQuizzesViewModel = viewModel(),
     modifier: Modifier = Modifier,
+    onlineQuizzesViewModel: OnlineQuizzesViewModel = viewModel(),
     navigateToQuizGame: (quizID: String) -> Unit = {},
     navigateToMainMenu: () -> Unit = {}
 ) {
@@ -92,7 +100,7 @@ fun OnlineQuizzes(
                 searchedQuizID = quizzesState.searchedShareID,
                 onValueChanged = {onlineQuizzesViewModel.changeSearchedQuizID(it)},
                 onButtonClick = {onlineQuizzesViewModel.searchQuizWihtID(quizzesState.searchedShareID)
-                    if (!quizzesState.quizID.equals("")) {navigateToQuizGame(quizzesState.quizID)}
+                    if (quizzesState.quizID != "") {navigateToQuizGame(quizzesState.quizID)}
                 }
             )
             Spacer(modifier = Modifier.padding(bottom = 50.dp))
@@ -104,7 +112,13 @@ fun OnlineQuizzes(
         }
     }
 }
-
+/**
+ * Upozornenie že zadané ID nemá žiaden kvíz
+ *
+ * @param show rozhoduje či sa má upozornenie ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param changeShowToFalse funkcia zabezpečujúca čo sa má stať po potvrdení alebo vykliknuti z upozornenia
+ * */
 @Composable
 fun ShowBadShareID(
     show: Boolean,
@@ -124,7 +138,16 @@ fun ShowBadShareID(
             })
     }
 }
-
+/**
+ * Zabezpečuje možnosť napísať id hladaného kvízu a pokus o jeho nájdenie
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param label označenie textoveho poľa
+ * @param icon ikona poľa
+ * @param searchedQuizID zadane id kvíza
+ * @param onValueChanged funkcia, ktorá sa zavolá po zmene hodnoty poľa
+ * @param onButtonClick funkcia, ktorá sa zavolá po stlačení tlačidla
+ * */
 @Composable
 fun SearchID(
     modifier: Modifier = Modifier,
@@ -171,6 +194,14 @@ fun SearchID(
         }
     }
 }
+/**
+ * Jednotlivy kviz ukázanz v liste kvízov na obrazovke
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param quizName meno kvízu
+ * @param quizShareID id zdielania kvízu
+ * @param onClick funckia, ktorá sa zavolá po stlačení kvízu
+ * */
 @Composable
 fun QuizInOnlineQuizzes(
     quizName: String,
@@ -210,7 +241,9 @@ fun QuizInOnlineQuizzes(
         }
     }
 }
-
+/**
+ * Preview Obrazovky
+ * */
 @Preview(showBackground = true)
 @Composable
 fun OnlineQuizzesPreview() {

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -48,14 +47,23 @@ import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
 
+/**
+ * Obrazovka pre hranie kvízu
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param quizID id tvoreného kvízu
+ * @param quizGameViewModel viewModel obrazovky
+ * @param navigateBack funkcia, ktorá zabezpečí kde sa má vratiť po ukončení kvízu
+ * */
 @Composable
-fun QuizGame(quizID: String = "",
-             quizGameViewModel: QuizGameViewModel = viewModel(),
-             navigateBack: () -> Unit = {},
+fun QuizGame(
+    modifier: Modifier = Modifier,
+    quizID: String = "",
+    quizGameViewModel: QuizGameViewModel = viewModel(),
+    navigateBack: () -> Unit = {},
 ) {
     val gameUiState by quizGameViewModel.gameUiState.collectAsState()
     LaunchedEffect(quizID) {
-        if (!gameUiState.quizID.equals(quizID)) {
+        if (gameUiState.quizID != quizID) {
             quizGameViewModel.loadQuiz(quizID)
         }
     }
@@ -148,6 +156,17 @@ fun QuizGame(quizID: String = "",
         }
     }
 }
+/**
+ * Ukáže okno z výsledkami hráča
+ *
+ * @param show rozhoduje či sa má upozornenie ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param onDismiss funkcia sa zavolá pri zrušení okna
+ * @param onConfirm funcia sa zavolá pri potvrdení okna
+ * @param points počet získaných bodov
+ * @param timeLeft koľko mu ostalo času
+ * @param place na akom sa umiestnil mieste
+ * */
 @Composable
 fun StatisticsAlertDialog(
     show: Boolean,
@@ -195,6 +214,14 @@ fun StatisticsAlertDialog(
             containerColor = Color2)
     }
 }
+/**
+ * Ukáže okno či si hráč želá ukončiť kvíz
+ *
+ * @param show rozhoduje či sa má upozornenie ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param onDismiss funkcia sa zavolá pri zrušení okna
+ * @param onConfirm funcia sa zavolá pri potvrdení okna
+ * */
 @Composable
 fun EndGameAlertDialog(
     show: Boolean,
@@ -227,7 +254,13 @@ fun EndGameAlertDialog(
             containerColor = Color2)
     }
 }
-
+/**
+ * Informácie o čase a počte bodov
+ *
+ * @param time momentálny čas,
+ * @param points po4et bodov čo sa má ukázať
+ *
+ * */
 @Composable
 fun ExtraInformation(
     time: String = "",
@@ -267,10 +300,16 @@ fun ExtraInformation(
     }
 }
 
+/**
+ * Text
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param value obsah textu
+ * */
 @Composable
 fun ReadOnlyTextField(
-    value : String = "",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    value : String = ""
 ){
     TextField(
         modifier = modifier
@@ -287,12 +326,21 @@ fun ReadOnlyTextField(
         )
     )
 }
+/**
+ * Otázky z informáciami pri ukazovaní výsledkov
+ *
+ * @param answerValue obsah odpovede
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param clicked či bola označená
+ * @param correct či je správna
+ * @param points počet bodov za otázku
+ * */
 @Composable
 fun EndAnswerField(
+    modifier: Modifier = Modifier,
     answerValue: String = "Answer",
     clicked: Boolean,
     correct: Boolean,
-    modifier: Modifier = Modifier,
     points: Int = 10
 ) {
     val color = if (clicked) Color3 else Color2
@@ -302,7 +350,7 @@ fun EndAnswerField(
             .fillMaxWidth()
             .padding(bottom = 25.dp)
             .border(width = 5.dp, color = Color5),
-        value = answerValue + " [Points: $points]",
+        value = "$answerValue [Points: $points]",
         textStyle = TextStyle(textAlign = TextAlign.Center),
         onValueChange = {},
         readOnly = true,
@@ -322,6 +370,14 @@ fun EndAnswerField(
         }
     )
 }
+/**
+ * Odpoveď počas hrania hry
+ *
+ * @param answerValue obsah odpovede
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param clicked či bola označená
+ * @param onClick čo sa stane po kliknutí naň
+ * */
 @Composable
 fun AnswerButtonGame(
     answerValue: String,
@@ -357,18 +413,25 @@ fun AnswerButtonGame(
         }
     }
 }
-
+/**
+ * Preview Obrazovky
+ * */
 @Preview(showBackground = true)
 @Composable
 fun QuizGamePreview() {
     QuizGame()
 }
+/**
+ * Preview Vypisu štatistik
+ * */
 @Preview(showBackground = true)
 @Composable
 fun StatisticsAlertDialogPrevie() {
     StatisticsAlertDialog(true,Modifier,{},{})
 }
-
+/**
+ * Preview odpovedi pri ukžke výsledkov
+ * */
 @Preview(showBackground = true)
 @Composable
 fun EndAnswerFieldPreview() {

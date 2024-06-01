@@ -38,16 +38,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
-import com.example.semestralnapraca.navigation.Screens
 import com.example.semestralnapraca.ui.theme.Color2
 import com.example.semestralnapraca.ui.theme.Color3
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
-
+/**
+ * Obrazovka knižnice kvízov uživateľa
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param quizLibraryViewModel viewModel obrazovky
+ * @param navigateToQuizGame funkcia, ktorá zabezpečí navigáciu do vybraného kvízu
+ * @param navigateToQuizCreation funkcia, ktorá zabezpečí navigáciu do tvorby kvízov
+ * @param navigateToMainMenu funkcia, ktorá zabezpečí navigáciu do Main Menu
+ * */
 @Composable
 fun QuizLibrary(
-    quizLibraryViewModel: QuizLibraryViewModel = viewModel(),
     modifier: Modifier = Modifier,
+    quizLibraryViewModel: QuizLibraryViewModel = viewModel(),
     navigateToQuizGame: (quizID: String) -> Unit = {},
     navigateToQuizCreation: (quizID: String) -> Unit = {},
     navigateToMainMenu:() -> Unit = {},
@@ -127,15 +134,24 @@ fun QuizLibrary(
         }
     }
 }
-
+/**
+ * Zobrazí okno na úpravu informácií kvízu
+ *
+ * @param showOptions rozhoduje či sa má okno ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param navigateToQuizCreation navigácia do tvorby kvízu
+ * @param navigateToQuizGame navigácia do hrania kvízu
+ * @param quizID id kvízu
+ * @param quizLibraryViewModel viewModel obrazovky
+ * */
 @Composable
 fun QuizOptionsDialog(
+    modifier: Modifier = Modifier,
     navigateToQuizGame:(quizID:String) -> Unit = {},
     navigateToQuizCreation:(quizID:String) -> Unit = {},
     quizID: String,
     showOptions: Boolean,
-    quizLibraryViewModel: QuizLibraryViewModel,
-    modifier: Modifier = Modifier
+    quizLibraryViewModel: QuizLibraryViewModel
                       ) {
     if (showOptions) {
         AlertDialog(onDismissRequest = { quizLibraryViewModel.changeQuizOptionsState(false) },
@@ -162,7 +178,15 @@ fun QuizOptionsDialog(
             containerColor = Color2)
     }
 }
-
+/**
+ * Zobrazí okno na ukážku zdielaneho id kvízu
+ *
+ * @param sharing rozhoduje či sa má okno ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param alreadyShared či už je kvíz zdielaný
+ * @param shareID id zdielania
+ * @param quizLibraryViewModel viewModel obrazovky
+ * */
 @Composable
 fun SharingDialog(
     modifier: Modifier = Modifier,
@@ -214,7 +238,14 @@ fun SharingDialog(
             containerColor = Color2)
     }
 }
-
+/**
+ * Zobrazí okno na úpravu mena kvízu
+ *
+ * @param renaming rozhoduje či sa má okno ukázať
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param textForRenaming meno
+ * @param quizLibraryViewModel viewModel obrazovky
+ * */
 @Composable
 fun RenamingDialog(
     quizLibraryViewModel: QuizLibraryViewModel,
@@ -248,13 +279,22 @@ fun RenamingDialog(
             containerColor = Color2)
     }
 }
-
+/**
+ * Jednotlivý kvíz v knižnici kvízov
+ *
+ * @param quizName meno kvízu
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param shared či je kvíz zdielaný
+ * @param shareID id zdielania kvízu
+ * @param quizID id kvízu
+ * @param libraryViewModel viewModel obrazovky
+ * */
 @Composable
 fun QuizInLibrary(
+    modifier: Modifier = Modifier,
     libraryViewModel: QuizLibraryViewModel = viewModel(),
     quizName: String,
     quizID: String,
-    modifier: Modifier = Modifier,
     shared: Boolean,
     shareID: String
 ) {
@@ -283,7 +323,7 @@ fun QuizInLibrary(
                 }
                 Button(
                     modifier = Modifier.weight(.6f),
-                    onClick = { libraryViewModel.showPlatOrEditOptionsDialog(quizID) },
+                    onClick = { libraryViewModel.showPlayOrEditOptionsDialog(quizID) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color3),
                 ) {
                     Text(text = quizName,
@@ -301,11 +341,19 @@ fun QuizInLibrary(
     }
 }
 
+/**
+ * Tlačidlo obrazovky
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param onClick čo sa stane po kliknutí
+ * @param icon ikona tlačidla
+ * @param color farba tlačidla
+ * */
 @Composable
 fun QuizButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     @DrawableRes icon: Int,
-    modifier: Modifier = Modifier,
     color : Color
 ) {
     Button(
@@ -322,12 +370,17 @@ fun QuizButton(
     }
 }
 
+/**
+ * Preview Obrazovky
+ * */
 @Preview(showBackground = true)
 @Composable
 fun GameLibraryPreview() {
     QuizLibrary()
 }
-
+/**
+ * Preview jednotlivých kvízov
+ * */
 @Preview(showBackground = true)
 @Composable
 fun QuizPreview() {

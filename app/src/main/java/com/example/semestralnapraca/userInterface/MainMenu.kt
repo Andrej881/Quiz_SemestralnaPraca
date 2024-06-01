@@ -26,12 +26,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.semestralnapraca.R
 import com.example.semestralnapraca.ui.theme.Color4
 import com.example.semestralnapraca.ui.theme.Color5
-
+/**
+ * Main Menu Obrazovka
+ *
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * @param mainMenuViewModel viewModel obrazovky
+ * @param onNavigateBack funkcia, ktorá zabezpečí navigáciu po stlačení tlačidla späť
+ * @param navigateLibrary funkcia, ktorá zabezpečí navigáciu do knižnice kvízov
+ * @param navigateOnline funkcia, ktorá zabezpečí navigáciu do výberu zdielaných kvízov
+ * */
 @Composable
-fun MainMenu(onNavigateBack: () -> Unit = {},
+fun MainMenu(
+             modifier: Modifier = Modifier,
+             onNavigateBack: () -> Unit = {},
              navigateLibrary: () -> Unit = {},
              navigateOnline: () -> Unit = {},
-             modifier: Modifier = Modifier,
              mainMenuViewModel: MainMenuViewModel = viewModel()) {
     Column (
         modifier = Modifier
@@ -69,7 +78,14 @@ fun MainMenu(onNavigateBack: () -> Unit = {},
     }
 }
 
-
+/**
+ * Tlačidlo na obrazovke
+ *
+ * @param onClick Funkcia rozhodujúca čo sa má stať po stlačení
+ * @param icon Ikona na tlačidle
+ * @param text text napísani na tlačidlu
+ * @param modifier modifier upravujúci vlastnosti obrazovky
+ * */
 @Composable
 fun OptionButton(
     onClick: () -> Unit,
@@ -111,6 +127,9 @@ fun OptionButton(
     }
 }
 
+/**
+ * Preview obrazovky
+ * */
 @Preview(showBackground = true)
 @Composable
 fun MainMenuPreview()
