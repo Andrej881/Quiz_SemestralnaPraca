@@ -32,6 +32,7 @@ enum class Screens(@StringRes val title: Int) {
 }
 /**
  * Rieší riadenie toho na akej sa momentalne nachadzate obrazovke
+ * Pomocou https://developer.android.com/codelabs/basic-android-kotlin-compose-navigation?hl=en#0
  *
  * @param modifier modifier upravujúci vlastnosti obrazovky
  * @param navController riadi navigaciu medzi obrazovkami

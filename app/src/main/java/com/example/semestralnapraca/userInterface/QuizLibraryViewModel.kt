@@ -141,10 +141,10 @@ class QuizLibraryViewModel: ViewModel() {
 
     }
     /**
-     * @param b zmení alreadyShared v quizzesState
+     * @param bool zmení alreadyShared v quizzesState
      * */
-    fun changeAlreadyChanged(b: Boolean) {
-        _quizzesState.value = _quizzesState.value.copy(alreadyShared = b)
+    fun changeAlreadyChanged(bool: Boolean) {
+        _quizzesState.value = _quizzesState.value.copy(alreadyShared = bool)
     }
     /**
      * Zobrazí okno na výber hrania alebo úpravi kvízu
