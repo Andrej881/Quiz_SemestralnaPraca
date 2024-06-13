@@ -39,4 +39,10 @@
     <string name="delete">Delete</string>
     <string name="saveQuiz">Save Quiz</string>
     <string name="time">Time in minutes</string>
+    <string name="end_quiz">End quiz</string>
+    <string name="end_quiz2">Do you want to finish the quiz</string>
+    <string name="stats">Statistics</string>
+    <string name="show_answers">Show answers</string>
+    <string name="time_left">Time left</string>
+    <string name="place">Place</string>
 </resources>

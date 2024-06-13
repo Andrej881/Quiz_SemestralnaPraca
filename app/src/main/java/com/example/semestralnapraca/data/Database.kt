@@ -7,35 +7,41 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-
+/**
+ * Trieda zabezpečuje ukladanie a čítanie dát z Firebase databázy
+ *
+ * Spravene pomocou firebase dokumentacie https://firebase.google.com/docs/database
+ * a upravene na asynchronne aj pomocou ChatGPT
+ * */
 class Database {
     private val database = FirebaseDatabase.getInstance()
+    /**
+     * singleton inštancia triedy
+     * */
     companion object {
-        /*private var instance: Database? = null
-        fun getInstance(): Database {
-            if (instance == null) {
-                instance = Database()
-            }
-            return instance!!
-        }*/
         @Volatile
         private var instance: Database? = null
-
+        /**
+         * @return vráti singleton inšatnciu triedy
+         * */
         fun getInstance(): Database {
             return instance ?: synchronized(this) {
                 instance ?: Database().also { instance = it }
             }
         }
     }
-
+    /**
+     * uloží kvíz do databázy
+     *
+     * @param quiz data kvízu, ktorý sa ma uložiť
+     * */
     suspend fun addQuizToDatabase(quiz : QuizData): String {
         return withContext(Dispatchers.IO) {
             val quizzesRef = database.getReference().child("quizzes")
-            var newQuizRef: DatabaseReference
-            if (quiz.quizId.equals("")) {
-                newQuizRef = quizzesRef.push()
+            val newQuizRef: DatabaseReference = if (quiz.quizId == "") {
+                quizzesRef.push()
             } else {
-                newQuizRef = quizzesRef.child(quiz.quizId)
+                quizzesRef.child(quiz.quizId)
             }
 
             var userID = ""
@@ -66,7 +72,11 @@ class Database {
             newQuizRef.key.toString()
         }
     }
-
+    /**
+     * Načíta kvíz z databázy
+     * @param quizID id kvízu
+     * @return vráti dáta kvízu
+     * */
     suspend fun loadQuizFromDatabase(quizID: String): QuizData {
         return withContext(Dispatchers.IO) {
             val quizRef = database.getReference("quizzes").child(quizID)
@@ -81,15 +91,21 @@ class Database {
                 val sharing = dataSnapshot.child("sharedToPublicQuizzes").getValue(String::class.java) ?: false.toString()
                 val shareID = dataSnapshot.child("shareID").getValue(String::class.java) ?: ""
                 val numberOfQuestions = dataSnapshot.child("numberOfQuestions").getValue(Int::class.java) ?: 0
+                val loadedTime = dataSnapshot.child("time").getValue(String::class.java) ?: "0"
+
 
                 // Create and return QuizData object
-                QuizData(name, quizID, sharing.toBoolean(), shareID, numberOfQuestions)
+                QuizData(name, quizID, sharing.toBoolean(), shareID, numberOfQuestions, loadedTime.toInt())
             } else {
                 // If dataSnapshot is null or doesn't exist, return a default QuizData or handle it as needed
-                QuizData("", "", false, "", 0)
+                QuizData("", "", false, "", 0, 0)
             }
         }
     }
+
+    /**
+     * @return vráti id zdielania z databázi pre kvíz, ktorému chcete nastaviť zdielanie
+     * */
     suspend fun loadQuizFreeSharingKey(): String {
         return withContext(Dispatchers.IO) {
             val codeRef = database.getReference("freeSharingCode")
@@ -99,6 +115,10 @@ class Database {
             codeSharingID
         }
     }
+    /**
+     * @param sharedQuizzes rozhoduje o tom či ma načítať všetky zdielane kvízy (= true) alebo kvízy patriace danému prihlásenemu uživateľovi(= false)
+     * @return podľa parametrov vráti kvízi z databázi
+     * */
     suspend fun loadQuizzesFromDatabase(sharedQuizzes: Boolean = false): List<QuizData> {
         return withContext(Dispatchers.IO) {
             val quizzesRef = database.getReference("quizzes")
@@ -129,19 +149,27 @@ class Database {
             quizList
         }
     }
-
+    /**
+     * Odstáni kvíz z databázy
+     * @param quizID id kvízu
+     * */
     suspend fun removeQuizFromDatabase(quizID: String) {
         withContext(Dispatchers.IO) {
             val quizzRef = database.getReference("quizzes").child(quizID)
             quizzRef.removeValue().await()
         }
     }
-
+    /**
+     * Podľa parametrov updatne obsah databázy
+     * @param table tabuľka odkial začínaju referencie
+     * @param childPath cesta na miesto kde ma nastať úprava
+     * @param updateInfo hashmapa <meno dát v databaze, nove dáta> informácii na zmenu dát
+     * */
     suspend fun updateContentInDatabase(table: String, childPath: List<String>, updateInfo: HashMap<String, Any>) {
         val tablesRef = database.getReference(table)
         var contentRef = tablesRef.ref
 
-        if (!childPath.isEmpty()) {
+        if (childPath.isNotEmpty()) {
             childPath.forEach {
                 Log.d("LD", it)
                 contentRef = contentRef.child(it)
@@ -160,14 +188,20 @@ class Database {
         }
     }
 
+    /**
+     * Pridá otázku do databázy
+     *
+     * @param quizID id quizu, ktorému má patriť
+     * @param qData data otázky
+     * @return Id otázky
+     * */
     suspend fun addQuestionToDatabase(quizID: String, qData: QuestionData): String {
         return withContext(Dispatchers.IO) {
             val questionsRef = database.getReference().child("quizzes").child(quizID).child("questions")
-            val newQuestionRef:DatabaseReference
-            if (qData.questionID.equals("")) {
-                newQuestionRef = questionsRef.push()
+            val newQuestionRef:DatabaseReference = if (qData.questionID == "") {
+                questionsRef.push()
             } else {
-                newQuestionRef = questionsRef.child(qData.questionID)
+                questionsRef.child(qData.questionID)
             }
             val questionData = hashMapOf(
                 "numberOfAnswers" to qData.numberOfAnswers,
@@ -178,6 +212,13 @@ class Database {
             newQuestionRef.key.toString()
         }
     }
+    /**
+     * Načíta otázku z databázy
+     *
+     * @param quizID id quizu, ktorému patri
+     * @param questionID id otázky
+     * @return Dáta Otázky
+     * */
     suspend fun loadQuestionFromDatabase(quizID: String, questionID: String): QuestionData {
         return withContext(Dispatchers.IO) {
             val questionRef = database.getReference("quizzes").child(quizID).child("questions").child(questionID)
@@ -195,6 +236,10 @@ class Database {
         }
     }
 
+    /**
+     * @param quizID id quizu, ktorému patria
+     * @return Vráti všetky otázky patriace vybranému kvízu z databázy
+     * */
     suspend fun loadQuestionsFromDatabase(quizID: String): List<QuestionData> {
         return withContext(Dispatchers.IO) {
             val questionsRef = database.getReference("quizzes").child(quizID).child("questions")
@@ -210,7 +255,14 @@ class Database {
             questionList
         }
     }
-
+    /**
+     * Pridá odpoveď do databázy
+     *
+     * @param quizID id quizu, ktorému má patriť
+     * @param questionID id otázkym ktorej ma patriť
+     * @param answerData data odpovede
+     * @return Vráti id odpovede
+     * */
     suspend fun addAnswerToDatabase(quizID: String, questionID: String, answerData: AnswerData): String {
         return withContext(Dispatchers.IO) {
 
@@ -232,11 +284,16 @@ class Database {
             return@withContext id
         }
     }
+    /**
+     * @param quizID id quizu, ktoréj patrí otázka
+     * @param questionID id otázky ktorej patira odpovede
+     * @return Vráti všetky odpovede patriace vybranej otázky z databázy
+     * */
     suspend fun loadAnswersFromDatabase(quizID: String, questionID: String): List<AnswerData> {
         return withContext(Dispatchers.IO) {
             val quizRef = database.getReference("quizzes")
             val answerList = mutableListOf<AnswerData>()
-            var answersRef = quizRef.child(quizID).child("questions").child(questionID).child("answers")
+            val answersRef = quizRef.child(quizID).child("questions").child(questionID).child("answers")
 
             val dataSnapshot = answersRef.get().await()
             dataSnapshot.children.forEach { answerSnapshot ->
@@ -255,7 +312,13 @@ class Database {
             answerList
         }
     }
-
+    /**
+     * Odstráni odpoveď z databázy
+     *
+     * @param currentAnswerID id odpovede
+     * @param quizID id kvízu, ktoremu patri otázka
+     * @param questionID id otázky ktorej patrí odpoveď
+     * */
     suspend fun removeAnswerFromDatabase(currentAnswerID: String, quizID: String, questionID: String) {
         Log.d("removeAnswerFromDatabase", quizID + questionID + currentAnswerID)
         withContext(Dispatchers.IO) {
@@ -263,7 +326,12 @@ class Database {
             quizzRef.removeValue().await()
         }
     }
-
+    /**
+     * Odstráni otázku z databázy
+     *
+     * @param quizID id kvízu, ktoremu patri otázka
+     * @param questionID id otázky
+     * */
     suspend fun removeQuestionFromDatabase(quizID: String, questionID: String) {
         Log.d("removeQuestionFromDatabase", quizID + questionID)
         withContext(Dispatchers.IO) {
@@ -271,4 +339,57 @@ class Database {
             quizzRef.removeValue().await()
         }
     }
+    /**
+     * Pridá zápis do štatistik kvízu
+     *
+     * @param quizID id kvízu
+     * @param data dáta, čo sa majú zapísať
+     * */
+    suspend fun addStatToDatabase(quizID: String, data: StatData): String {
+        return withContext(Dispatchers.IO) {
+            val statisticsRef = database.getReference().child("quizzes").child(quizID).child("statistics")
+            val newStatisticsRef = statisticsRef.push()
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val userID = currentUser?.uid
+            val userEmail = currentUser?.email
+
+            val statisticsData = hashMapOf(
+                "points" to data.points,
+                "timeLeft" to data.timeLeft,
+                "quizID" to quizID,
+                "userID" to userID,
+                "userEmail" to userEmail
+            )
+            newStatisticsRef.setValue(statisticsData).await()
+            newStatisticsRef.key.toString()
+        }
+    }
+    /**
+     * @param quizID id kvízu, ktorého štatistiky sa získavajú
+     * @return Vráti Zoznam všetkých zápisov štatistik daného kvízu
+     * */
+    suspend fun loadStatisticsFromDatabase(quizID: String): List<StatData> {
+        return withContext(Dispatchers.IO) {
+            val statRef = database.getReference("quizzes").child(quizID).child("statistics")
+            val statList = mutableListOf<StatData>()
+
+            val dataSnapshot = statRef.get().await()
+            dataSnapshot.children.forEach { statSnapshot ->
+                val points = statSnapshot.child("points").getValue(Int::class.java) ?: 0
+                val timeLeft = statSnapshot.child("timeLeft").getValue(String::class.java) ?: "0:00"
+                val userID = statSnapshot.child("userID").getValue(String::class.java) ?: ""
+                val userEmail = statSnapshot.child("userEmail").getValue(String::class.java) ?: ""
+
+                statList.add(StatData(
+                    points = points,
+                    timeLeft = timeLeft,
+                    userID = userID,
+                    userEmail = userEmail,
+                    quizID = quizID
+                ))
+            }
+            statList
+        }
+    }
+
 }
